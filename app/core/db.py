@@ -4,8 +4,11 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import declarative_base
+from pathlib import Path
 
-DATABASE_URL = "sqlite+aiosqlite:///./app.db"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+DATABASE_URL = f"sqlite+aiosqlite:///{PROJECT_ROOT / 'app' / 'app.db'}"
 
 engine = create_async_engine(
     DATABASE_URL,

@@ -16,15 +16,8 @@ from fastapi import FastAPI
 
 from app.core.logging import setup_logging
 from app.core.config import get_settings
-from app.controller.health_controller import router as health_router
-from app.controller.auth_controller import router as auth_router
-from app.core.error_handlers import (
-    app_exception_handler,
-    not_found_exception_handler,
-    service_exception_handler,
-)
-from app.core.exceptions import AppException, NotFoundError, ServiceError
 from app.core.db import engine, Base
+from app.controller.routers import addGlobalExceptionHandlers, addRouters
 
 
 @asynccontextmanager
@@ -53,21 +46,13 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # --------------------
-    # Routers
-    # --------------------
-    app.include_router(health_router)
-    app.include_router(auth_router)
-
-    # --------------------
-    # Global Exception Handlers
-    # --------------------
-    app.add_exception_handler(AppException, app_exception_handler)
-    app.add_exception_handler(NotFoundError, not_found_exception_handler)
-    app.add_exception_handler(ServiceError, service_exception_handler)
-
+    addRouters(app)
+    addGlobalExceptionHandlers(app)
     return app
 
+
+# ✅ THIS IS WHAT UVICORN IMPORTS
+app = create_app()
 
 async def main() -> None:
     settings = get_settings()
@@ -76,7 +61,7 @@ async def main() -> None:
     logging.getLogger(__name__).info("Starting FastAPI service")
 
     app = create_app()
-    
+
     config = uvicorn.Config(
         app=app,
         host="127.0.0.1",

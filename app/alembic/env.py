@@ -10,6 +10,7 @@ import asyncio
 from logging.config import fileConfig
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
+from app.core.db import DATABASE_URL
 
 from alembic import context
 
@@ -22,11 +23,13 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+config.set_main_option("sqlalchemy.url", DATABASE_URL)
+
 # metadata
 from app.core.db import Base
 from app.models.health import HealthStatus  # noqa: F401 # force model registration
-from app.core.db import Base
-
+from app.models.audit_orm import AuditORM  # noqa: F401 # force model registration
+from app.models.user import User  # noqa: F401 # force model registration
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
