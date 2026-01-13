@@ -1,3 +1,5 @@
+# flake8: noqa
+
 """initial schema
 
 Revision ID: 2953f3f22f5d

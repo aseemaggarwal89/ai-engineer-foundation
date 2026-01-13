@@ -18,3 +18,7 @@ class UserReadResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserListResponse(BaseModel):
+    users: list[UserReadResponse]

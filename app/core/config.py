@@ -16,7 +16,7 @@ def get_settings() -> Settings:
     return Settings(
         app_name=os.getenv("APP_NAME", "AI Engineer Foundation"),
         environment=os.getenv("ENVIRONMENT", "local"),
-        log_level=os.getenv("LOG_LEVEL", "INFO"),
+        log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
     )
 
 # Why this is correct

@@ -3,24 +3,44 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 
 from app.core.security import SECRET_KEY, ALGORITHM
+from app.dependencies.deps import get_user_repository
+from app.models.user import User
+from app.repositories.user_repository import UserRepository
 
 security = HTTPBearer()
 
 
-def get_current_user(
+async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-) -> str:
-    token = credentials.credentials
+    user_repo: UserRepository = Depends(get_user_repository)
+) -> User:
+    payload = decode_token(credentials.credentials)
+    user_id = payload["sub"]
+    user = await user_repo.get_by_id(user_id)
 
+    if not user:
+        raise HTTPException(status_code=401)
+
+    return user
+
+
+async def get_current_active_user(
+    user: User = Depends(get_current_user),
+) -> User:
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user",
+        )
+    return user
+
+
+def decode_token(token: str) -> dict:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str | None = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user_id
-
-    except JWTError:
+        return payload
+    except JWTError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
-        )
+        ) from e

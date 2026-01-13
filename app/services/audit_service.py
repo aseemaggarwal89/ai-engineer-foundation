@@ -1,3 +1,5 @@
+# flake8: noqa: E501
+
 import logging
 
 from app.domain.audit_event import AuditEvent
@@ -12,23 +14,14 @@ class AuditService:
         self._repo = repo
 
     async def log_login(self, user_id: str) -> None:
-        try:
-            event = AuditEvent(
-                user_id=user_id,
-                event_type=EventType.LOGIN
-            )
-            await self._repo.create_event(event)
-        except Exception:
-            logger.exception(
-                "Audit log failed",
-                extra={"user_id": user_id}
-            )
+        await self.log_event(user_id, EventType.USER_LOGIN)
 
-    async def log_event(self, user_id: str) -> None:
+    async def log_event(self, user_id: str, event_type: EventType) -> None:
+        logger.info("AUDIT TASK STARTED", extra={"user_id": user_id, "event_type": event_type})
         try:
             event = AuditEvent(
                 user_id=user_id,
-                event_type=EventType.LOGIN
+                event_type=event_type
             )
             await self._repo.create_event(event)
         except Exception:

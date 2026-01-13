@@ -1,3 +1,5 @@
+# flake8: noqa
+
 """add users table
 
 Revision ID: d4d4a9fc5e01

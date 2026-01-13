@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
+from sqlalchemy import select
 
 
 class UserRepository:
@@ -24,3 +25,9 @@ class UserRepository:
         await self._session.commit()
 
         return user
+    
+    async def list_all_users(self) -> list[User]:
+        result = await self._session.execute(
+            select(User)
+        )
+        return result.scalars().all()

@@ -30,9 +30,14 @@ class AuthService:
             raise UserAlreadyExistsError(
                 f"User with id '{user_data.id}' already exists"
             )
-
+        
         # Implement user registration logic here
         return await self._user_repo.save(user_data.to_model())
         
     def create_token(self, user: User) -> str:
         return create_access_token(subject=user.id)
+    
+    async def read_users(self) -> list[User]:
+        # Placeholder for user listing logic
+        users = await self._user_repo.list_all_users()
+        return users

@@ -18,13 +18,20 @@ from app.core.logging import setup_logging
 from app.core.config import get_settings
 from app.core.db import engine, Base
 from app.controller.routers import addGlobalExceptionHandlers, addRouters
+from app.core.model_registry import ModelRegistry
 
+logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # --------------------
     # Startup
     # --------------------
+    logger.info("Application startup")
+    registry = ModelRegistry()
+    await registry.load()
+    app.state.model_registry = registry
+
     # logging.getLogger(__name__).info("Initializing database")
     # async with engine.begin() as conn:
     #     await conn.run_sync(Base.metadata.create_all)
@@ -34,12 +41,14 @@ async def lifespan(app: FastAPI):
     # --------------------
     # Shutdown (future use)
     # --------------------
-    logging.getLogger(__name__).info("Application shutdown")
+    await registry.close()
+    logger.info("Application shutdown")
 
     
 def create_app() -> FastAPI:
     settings = get_settings()
-
+    setup_logging(settings.log_level)
+    logger.info("Starting FastAPI service")
     app = FastAPI(
         title=settings.app_name,
         debug=settings.environment == "local",
@@ -56,12 +65,7 @@ app = create_app()
 
 async def main() -> None:
     settings = get_settings()
-    setup_logging(settings.log_level)
-
-    logging.getLogger(__name__).info("Starting FastAPI service")
-
     app = create_app()
-
     config = uvicorn.Config(
         app=app,
         host="127.0.0.1",
