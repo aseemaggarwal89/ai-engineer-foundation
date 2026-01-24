@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.user import User
+from app.db.models.user import User
 from sqlalchemy import select
 
 
@@ -11,8 +11,11 @@ class UserRepository:
         self._session = session
 
     async def get_by_id(self, user_id: str) -> User | None:
-        return await self._session.get(User, user_id)
-    
+        result = await self._session.execute(
+            select(User).where(User.id == user_id)
+        )
+        return result.scalar_one_or_none()
+        
     async def save(self, user: User) -> User:
         # Push INSERT to DB (gets PK)
         self._session.add(user)

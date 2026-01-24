@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run FastAPI (dev)",
+            "type": "shell",
+            "command": "uvicorn app.main:app --reload",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": "pytest",
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Alembic Migrations",
+            "type": "shell",
+            "command": "alembic upgrade head",
+            "problemMatcher": []
+        }
+    ]
+}

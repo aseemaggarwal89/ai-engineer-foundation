@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.models.health import HealthStatus
+from app.db.models.health import HealthStatus
 
 
 class HealthRepository:

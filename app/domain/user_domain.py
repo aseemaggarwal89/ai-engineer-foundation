@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from app.models.user import User
+from app.db.models.user import User
 
 
 class UserRegisterRequest(BaseModel):

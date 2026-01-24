@@ -1,4 +1,4 @@
-from app.core.exceptions import ServiceError
+from app.domain.exceptions import ServiceError
 from app.repositories.health_repository import HealthRepository
 
 

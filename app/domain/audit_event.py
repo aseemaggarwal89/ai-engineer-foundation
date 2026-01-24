@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from app.domain.event_type import EventType
-from app.models.audit_orm import AuditORM
+from app.db.models.audit_orm import AuditORM
 
 
 @dataclass(frozen=True)

@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.db import Base
+from app.db.db import Base
 
 
 class HealthResponse(BaseModel):

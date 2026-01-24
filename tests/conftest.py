@@ -12,7 +12,7 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.db import engine_test, AsyncSessionTest
-from app.core.db import Base
+from app.db.db import Base
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)

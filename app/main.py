@@ -16,8 +16,9 @@ from fastapi import FastAPI
 
 from app.core.logging import setup_logging
 from app.core.config import get_settings
-from app.core.db import engine, Base
-from app.controller.routers import addGlobalExceptionHandlers, addRouters
+from app.db.db import engine, Base
+from app.core.exception_registry import addGlobalExceptionHandlers
+from app.routers.routers import addRouters
 from app.core.model_registry import ModelRegistry
 
 logger = logging.getLogger(__name__)
