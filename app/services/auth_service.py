@@ -25,7 +25,6 @@ class AuthService:
         self._user_repo = user_repo
 
     async def authenticate(self, user_id: str) -> User:
-        # flake8: noqa: E501
         """
         Authenticate a user by user_id.
 

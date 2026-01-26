@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: ai_engineer_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ai_engineer_db_user
+      POSTGRES_PASSWORD: ai_engineer_db_pass
+      POSTGRES_DB: ai_engineer_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data:

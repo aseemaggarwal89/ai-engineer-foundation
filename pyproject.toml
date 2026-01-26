@@ -1,0 +1,22 @@
+[tool.flake8]
+max-line-length = 100
+
+# Globally ignore line length
+ignore = [
+    "E501",  # line too long
+    "W292",  # no newline at end of file
+    "W293",  # blank line contains whitespace
+    "W391",  # blank line at end of file
+]
+
+# Never lint these paths
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "env",
+    "build",
+    "dist",
+    "alembic/versions",
+]

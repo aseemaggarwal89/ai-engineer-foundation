@@ -9,6 +9,10 @@ from app.routers.auth import (
     protected_router as auth_protected_router,
 )
 
+from app.routers.admin import (
+    admin_router as admin_router
+)
+
 
 def addRouters(app: FastAPI) -> None:
     """
@@ -26,6 +30,9 @@ def addRouters(app: FastAPI) -> None:
         # Auth
         auth_public_router,
         auth_protected_router,
+
+        # Admin
+        admin_router
     ]
 
     for router in routers:

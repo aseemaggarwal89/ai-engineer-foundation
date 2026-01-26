@@ -10,6 +10,7 @@ class Settings(BaseModel):
     app_name: str
     environment: str
     log_level: str
+    database_url: str
 
 
 def get_settings() -> Settings:
@@ -17,6 +18,7 @@ def get_settings() -> Settings:
         app_name=os.getenv("APP_NAME", "AI Engineer Foundation"),
         environment=os.getenv("ENVIRONMENT", "local"),
         log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
+        database_url=os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./app.db"),
     )
 
 # Why this is correct

@@ -1,0 +1,21 @@
+[flake8]
+max-line-length = 100
+
+ignore =
+    E501,
+    W292,
+    W293,
+    W391,
+    E122,
+    E128,
+    F401
+
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    build,
+    dist,
+    alembic/versions

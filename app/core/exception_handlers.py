@@ -62,6 +62,6 @@ async def auth_exception_handler(
         status_code=401,
         content={
             "detail": exc.message,
-            "code": exc.code or "AUTH_401",
+            "code": exc.error_code or "AUTH_401",
         },
     )
