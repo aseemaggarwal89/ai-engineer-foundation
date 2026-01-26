@@ -1,8 +1,9 @@
-
+from app.domain.auth_domain import LoginRequest
 from app.repositories.user_repository import UserRepository
 from app.domain.user_domain import UserRegisterRequest
-from app.domain.exceptions import UserAlreadyExistsError, NotFoundError
+from app.domain.exceptions import AuthenticationError, UserAlreadyExistsError, NotFoundError
 from app.security.jwt import create_access_token
+from app.security.password import hash_password, verify_password
 from app.db.models.user import User
 
 
@@ -24,7 +25,10 @@ class AuthService:
         # Repository abstraction for persistence operations
         self._user_repo = user_repo
 
-    async def authenticate(self, user_id: str) -> User:
+    async def authenticate(
+        self,
+        data: LoginRequest,
+    ) -> User:
         """
         Authenticate a user by user_id.
 
@@ -34,12 +38,18 @@ class AuthService:
         Raises:
             NotFoundError: if the user does not exist
         """
-        user = await self._user_repo.get_by_id(user_id)
+        user = await self._user_repo.get_by_email(data.email)
 
         if not user:
             # Domain-level failure → handled by global exception handler
-            raise NotFoundError(f"User with id '{user_id}' not found")
-
+            raise AuthenticationError()
+        
+        if not verify_password(data.password, user.password_hash):
+            raise AuthenticationError()
+        
+        if not user.is_active:
+            raise AuthenticationError("User account is inactive")
+        
         # Additional checks can be added here:
         # - user.is_active
         # - password / OTP validation
@@ -56,15 +66,17 @@ class AuthService:
         Raises:
             UserAlreadyExistsError: if a user with the same ID already exists
         """
-        existing_user = await self._user_repo.get_by_id(user_data.id)
+        # existing_user = await self._user_repo.get_by_id(user_data.id)
+        existing_user = await self._user_repo.get_by_email(user_data.email)
 
         if existing_user:
             raise UserAlreadyExistsError(
-                f"User with id '{user_data.id}' already exists"
+                f"User with email '{user_data.email}' already exists"
             )
 
         # Convert domain request object into persistence model
         user_model = user_data.to_model()
+        user_model.password_hash = hash_password(user_data.password)
 
         # Persist user and return the saved entity
         return await self._user_repo.save(user_model)
@@ -87,7 +99,7 @@ class AuthService:
         at the API dependency layer.
         """
         return await self._user_repo.list_all_users()
-    
+
     async def get_active_user_by_id(self, user_id: str) -> User:
         """
         Retrieve an active user by user_id.
@@ -101,4 +113,3 @@ class AuthService:
             raise NotFoundError(f"Active user with id '{user_id}' not found")
 
         return user
-

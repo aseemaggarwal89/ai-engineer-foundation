@@ -56,5 +56,5 @@ async def health_check(
     status = await service.check()
 
     return HealthResponse(
-        status=f"{status} (user={current_user.id})"
+        status=f"{status} (user={current_user.email})"
     )

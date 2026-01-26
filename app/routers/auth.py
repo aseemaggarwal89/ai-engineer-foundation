@@ -17,6 +17,10 @@ from app.domain.user_domain import (
     UserRegisterRequest,
     UserReadResponse,
 )
+from app.domain.auth_domain import (
+    LoginRequest,
+    TokenResponse,
+)
 from app.domain.event_type import EventType
 
 logger = logging.getLogger(__name__)
@@ -30,10 +34,9 @@ public_router = APIRouter(
     tags=["auth"],
 )
 
-
-@public_router.post("/token")
-async def issue_token(
-    user_id: str,
+@public_router.post("/login", response_model=TokenResponse)
+async def login(
+    data: LoginRequest,
     background_tasks: BackgroundTasks,
     auth_service: AuthService = Depends(get_auth_service),
     audit_service: AuditService = Depends(get_audit_service),
@@ -41,15 +44,40 @@ async def issue_token(
     """
     Issue an access token for an existing user.
     """
-    user = await auth_service.authenticate(user_id)
-    token = auth_service.create_token(user)
 
+    user = await auth_service.authenticate(
+        data=data
+    )
+
+    token = auth_service.create_token(user)
     background_tasks.add_task(
         audit_service.log_login,
         user.id,
     )
 
-    return {"access_token": token}
+
+    return TokenResponse(access_token=token)
+
+
+# @public_router.post("/token")
+# async def issue_token(
+#     user_id: str,
+#     background_tasks: BackgroundTasks,
+#     auth_service: AuthService = Depends(get_auth_service),
+#     audit_service: AuditService = Depends(get_audit_service),
+# ):
+#     """
+#     Issue an access token for an existing user.
+#     """
+#     user = await auth_service.authenticate(user_id)
+#     token = auth_service.create_token(user)
+
+#     background_tasks.add_task(
+#         audit_service.log_login,
+#         user.id,
+#     )
+
+#     return {"access_token": token}
 
 
 @public_router.post(

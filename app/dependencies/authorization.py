@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException, status
 from app.db.models.user import User
 from app.domain.role import Role
 from app.dependencies.deps import get_current_active_user
-from app.domain.exceptions import AuthenticationError
+from app.domain.exceptions import AuthorizationError
 
 
 def require_role(required_role: Role):
@@ -15,18 +15,17 @@ def require_role(required_role: Role):
         user: User = Depends(get_current_active_user),
     ) -> User:
         if user.role != required_role:
-            raise AuthenticationError("Insufficient permissions")
-            # raise HTTPException(
-            #     status_code=status.HTTP_403_FORBIDDEN,
-            #     detail="Insufficient permissions",
-            # )
+            raise AuthorizationError()
         return user
 
     return _role_guard
 
-# def require_roles(*allowed_roles: Role):
-#     def _guard(user: User = Depends(get_current_active_user)) -> User:
-#         if user.role not in allowed_roles:
-#             raise HTTPException(status_code=403, detail="Forbidden")
-#         return user
-#     return _guard
+
+def multiple_require_roles(*allowed_roles: Role):
+    
+    def _guard(user: User = Depends(get_current_active_user)) -> User:
+        if user.role not in allowed_roles:
+            raise AuthorizationError()
+        return user
+    
+    return _guard

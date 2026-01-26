@@ -8,7 +8,7 @@ They are registered once at application startup.
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from app.domain.exceptions import (
-    AppException, NotFoundError, ServiceError, AuthenticationError
+    AppException, NotFoundError, ServiceError, AuthenticationError, AuthorizationError
 )
 
 

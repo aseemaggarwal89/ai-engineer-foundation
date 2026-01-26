@@ -56,4 +56,25 @@ class UserAlreadyExistsError(AppException):
 
 
 class AuthenticationError(AppException):
-    pass
+    """
+    Raised when authentication fails.
+
+    Used for:
+    - Invalid credentials
+    - Missing or invalid token
+    - Expired token
+    - Inactive account
+    """
+
+    status_code = 401
+    error_code = "AUTH_401"
+    message = "Invalid email or password"
+
+
+class AuthorizationError(AppException):
+    """
+    Raised when a user lacks sufficient permissions.
+    """
+    status_code = 403
+    error_code = "FORBIDDEN"
+    message = "Insufficient permissions"

@@ -25,3 +25,15 @@ class User(Base):
         default=Role.USER,
         nullable=False,
     )
+
+    email: Mapped[str] = mapped_column(
+        String,
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+
+    password_hash: Mapped[str] = mapped_column(
+        String,
+        nullable=False,
+    )

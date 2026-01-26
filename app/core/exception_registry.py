@@ -4,7 +4,8 @@ Registers global exception handlers with the FastAPI application.
 
 from fastapi import FastAPI
 from app.domain.exceptions import (
-    AppException, NotFoundError, ServiceError, AuthenticationError
+    AppException, NotFoundError, ServiceError, AuthenticationError,
+    AuthorizationError,
 )
 from app.core.exception_handlers import (
     app_exception_handler,
@@ -24,3 +25,4 @@ def addGlobalExceptionHandlers(app: FastAPI):
     app.add_exception_handler(NotFoundError, not_found_exception_handler)
     app.add_exception_handler(ServiceError, service_exception_handler)
     app.add_exception_handler(AuthenticationError, auth_exception_handler)
+    app.add_exception_handler(AuthorizationError, app_exception_handler)
