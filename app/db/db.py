@@ -28,11 +28,3 @@ AsyncSessionLocal = async_sessionmaker(
 
 # Declarative base
 Base = declarative_base()
-
-
-async def get_db_session() -> AsyncSession:
-    """
-    FastAPI dependency that provides a transactional async DB session.
-    """
-    async with AsyncSessionLocal() as session:
-        yield session

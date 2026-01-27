@@ -1,6 +1,6 @@
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi import Depends, Request, status
-from app.domain.exceptions import AuthenticationError
+from fastapi import Depends
+from app.domain.exceptions.exceptions import AuthenticationError
 
 from app.security.jwt import decode_token
 

@@ -1,8 +1,7 @@
-# flake8: noqa: E501
-
 from collections.abc import Callable
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.domain.audit_event import AuditEvent, to_orm
+from sqlalchemy.exc import SQLAlchemyError
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,18 +13,25 @@ class AuditRepository:
 
     async def create_event(self, event: AuditEvent) -> None:
         async with self._session_factory() as session:
-            logger.debug("AUDIT create_event STARTED", extra={"session": session})
-            audit_event = to_orm(event)            
-            session.add(audit_event)
+            logger.debug(
+                "AUDIT create_event STARTED",
+                extra={"event_type": event.event_type},
+            )
 
-            # Push INSERT to DB (gets PK)
-            await session.flush()
+            try:
+                audit_event = to_orm(event)
+                session.add(audit_event)
 
-            # Load DB-generated fields (id, created_at, etc.)
-            await session.refresh(audit_event)
+                await session.flush()
+                await session.refresh(audit_event)
+                await session.commit()
 
-            logger.debug("AUDIT create_event completed", extra={"audit": audit_event})
+                logger.debug(
+                    "AUDIT create_event completed",
+                    extra={"audit_id": audit_event.id},
+                )
 
-            # Commit transaction
-            await session.commit()
-        
+            except SQLAlchemyError:
+                await session.rollback()
+                logger.exception("AUDIT create_event failed")
+                raise

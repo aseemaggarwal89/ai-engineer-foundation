@@ -1,17 +1,20 @@
+import uuid
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import (
     String, Boolean, Enum as SAEnum
 )
 from app.db.db import Base
-from app.domain.role import Role
+from app.domain.entities.user_role import UserRole
 
 
-class User(Base):
+class UserORM(Base):    
     __tablename__ = "users"
+
     id: Mapped[str] = mapped_column(
         String,
         primary_key=True,
         index=True,
+        default=lambda: str(uuid.uuid4()),
     )
 
     is_active: Mapped[bool] = mapped_column(
@@ -20,9 +23,9 @@ class User(Base):
         nullable=False,
     )
 
-    role: Mapped[Role] = mapped_column(
-        SAEnum(Role, name="user_role"),
-        default=Role.USER,
+    role: Mapped[UserRole] = mapped_column(
+        SAEnum(UserRole, name="user_role"),
+        default=UserRole.USER,
         nullable=False,
     )
 

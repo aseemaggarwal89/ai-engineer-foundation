@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class Role(str, Enum):
+class UserRole(str, Enum):
     """
     Application roles used for authorization.
 
@@ -9,3 +9,4 @@ class Role(str, Enum):
     """
     USER = "USER"
     ADMIN = "ADMIN"
+

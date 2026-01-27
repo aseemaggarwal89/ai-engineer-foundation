@@ -2,13 +2,10 @@ import logging
 from fastapi import APIRouter, Depends
 
 from app.db.models.health import HealthResponse
-from app.db.models.user import User
-from app.services.health_protocol import HealthServiceProtocol
-from app.dependencies.deps import (
-    health_service,
-    get_current_user,
-)
-
+from app.domain.entities.user import User
+from app.security.dependencies import get_current_user
+from app.domain.use_cases.health.check_health_status import CheckHealthStatusUseCase
+from app.dependencies.use_cases import get_check_health_status_use_case
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------
@@ -41,8 +38,8 @@ protected_router = APIRouter(
     response_model=HealthResponse,
 )
 async def health_check(
-    service: HealthServiceProtocol = Depends(health_service),
-    current_user: User = Depends(get_current_user),
+    use_case: CheckHealthStatusUseCase = Depends(get_check_health_status_use_case),
+    user: User = Depends(get_current_user),
 ) -> HealthResponse:
     """
     Health check endpoint.
@@ -53,8 +50,8 @@ async def health_check(
     """
     logger.debug("Health check endpoint called")
 
-    status = await service.check()
+    status = await use_case.execute()
 
     return HealthResponse(
-        status=f"{status} (user={current_user.email})"
+        status=f"{status} (user={user.email})"
     )

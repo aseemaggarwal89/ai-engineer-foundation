@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 from app.core.config import get_settings
-from app.domain.exceptions import AuthenticationError
+from app.domain.entities.user import User
+from app.domain.exceptions.exceptions import AuthenticationError
 
 # # flake8: noqa: E501
 
@@ -31,7 +32,7 @@ def decode_token(token: str) -> dict:
     return payload
 
 
-def create_access_token(subject: str) -> str:
+def create_access_token(user: User) -> str:
     """
     Create a JWT access token.
 
@@ -42,7 +43,8 @@ def create_access_token(subject: str) -> str:
     )
 
     payload = {
-        "sub": subject,
+        "sub": str(user.id),
+        "role": user.role.value,
         "exp": expire,
     }
 

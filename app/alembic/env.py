@@ -29,7 +29,7 @@ config.set_main_option("sqlalchemy.url", DATABASE_URL)
 from app.db.db import Base
 from app.db.models.health import HealthStatus  # noqa: F401 # force model registration
 from app.db.models.audit_orm import AuditORM  # noqa: F401 # force model registration
-from app.db.models.user import User  # noqa: F401 # force model registration
+from app.db.models.user_orm import UserORM  # noqa: F401 # force model registration
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel

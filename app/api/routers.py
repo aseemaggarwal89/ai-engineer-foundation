@@ -1,15 +1,15 @@
 from fastapi import FastAPI
 
-from app.routers.health import (
+from app.api.routes.health import (
     public_router as health_public_router,
     protected_router as health_protected_router,
 )
-from app.routers.auth import (
+from app.api.routes.auth import (
     public_router as auth_public_router,
     protected_router as auth_protected_router,
 )
 
-from app.routers.admin import (
+from app.api.routes.admin import (
     admin_router as admin_router
 )
 

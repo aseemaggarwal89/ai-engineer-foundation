@@ -1,17 +1,15 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-
+from app.domain.interfaces.health_repository import HealthRepository
 from app.db.models.health import HealthStatus
 
 
-class HealthRepository:
+class HealthRepositoryImpl(HealthRepository):
     def __init__(self, session: AsyncSession):
         self._session = session
-
+    
     async def fetch_status(self) -> str:
-        result = await self._session.execute(
-            select(HealthStatus).limit(1)
-        )
+        result = await self._session.execute(select(HealthStatus).limit(1))
         row = result.scalar_one_or_none()
 
         if row is None:

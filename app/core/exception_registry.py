@@ -3,7 +3,7 @@ Registers global exception handlers with the FastAPI application.
 """
 
 from fastapi import FastAPI
-from app.domain.exceptions import (
+from app.domain.exceptions.exceptions import (
     AppException, NotFoundError, ServiceError, AuthenticationError,
     AuthorizationError,
 )
