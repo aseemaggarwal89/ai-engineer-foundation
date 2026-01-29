@@ -20,6 +20,7 @@ from app.db.db import engine, Base
 from app.core.exception_registry import addGlobalExceptionHandlers
 from app.api.routers import addRouters
 from app.core.model_registry import ModelRegistry
+from app.core.middleware.request_id import RequestIDMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -49,13 +50,21 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     settings = get_settings()
     setup_logging(settings.log_level)
-    logger.info("Starting FastAPI service")
+    logger.info(
+    "FastAPI service starting",
+    extra={
+        "event": "service_startup",
+        "environment": settings.environment,
+        "app_name": settings.app_name,
+    },
+    )
     app = FastAPI(
         title=settings.app_name,
         debug=settings.environment == "local",
         lifespan=lifespan,
     )
 
+    app.add_middleware(RequestIDMiddleware)
     addRouters(app)
     addGlobalExceptionHandlers(app)
     return app

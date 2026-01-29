@@ -1,6 +1,9 @@
+import logging
+from typing import List
 from app.domain.interfaces.user_repository import UserRepository
 from app.domain.entities.user import User
-from typing import List
+
+logger = logging.getLogger(__name__)
 
 
 class ListUsersUseCase:
@@ -16,7 +19,26 @@ class ListUsersUseCase:
         """
         Retrieve all users.
 
-        This method assumes authorization has already been enforced
-        at the API dependency layer.
+        Authorization is enforced at the API layer.
         """
-        return await self.user_repo.list_all()
+
+        # 1️⃣ Attempt (low noise)
+        logger.debug(
+            "Listing users",
+            extra={
+                "event": "list_users_attempt",
+            },
+        )
+
+        users = await self.user_repo.list_all()
+
+        # 2️⃣ Result summary (important, but not noisy)
+        logger.info(
+            "Users listed successfully",
+            extra={
+                "event": "list_users_success",
+                "user_count": len(users),
+            },
+        )
+
+        return users
