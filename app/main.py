@@ -26,6 +26,11 @@ from app.core.middleware.request_id import RequestIDMiddleware
 
 from app.core.tracing import setup_tracing
 
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from app.core.rate_limit import limiter
+
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager
@@ -76,6 +81,11 @@ def create_app() -> FastAPI:
     setup_tracing(app, settings.app_name)
 
     # 4️⃣ Middleware (order matters)
+
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_middleware(SlowAPIMiddleware)
+    
     # metrics wrapper
     app.add_middleware(MetricsMiddleware)
 

@@ -26,6 +26,9 @@ class Settings(BaseModel):
     jwt_algorithm: str
     jwt_access_token_expire_minutes: int
 
+    db_timeout_seconds: int = 3
+    login_rate_limit: str = "5/minute"
+
 
 def get_settings() -> Settings:
     return Settings(

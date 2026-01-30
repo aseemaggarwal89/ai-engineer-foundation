@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from app.db.models.health import HealthResponse
 from app.domain.entities.user import User
@@ -10,6 +10,8 @@ from app.dependencies.use_cases import (
     get_readiness_usecase,
     get_deep_health_usecase,
 )
+from app.core.rate_limit import limiter
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------
@@ -58,7 +60,9 @@ protected_router = APIRouter(
     "/health",
     response_model=HealthResponse,
 )
+@limiter.limit("30/minute")
 async def health_check(
+    request: Request,  # ✅ REQUIRED for SlowAPI
     use_case=Depends(get_check_health_status_use_case),
     user: User = Depends(get_current_user),
 ) -> HealthResponse:

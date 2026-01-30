@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, BackgroundTasks, status
+from fastapi import APIRouter, Depends, BackgroundTasks, status, Request
 from app.domain.entities.user import User
 from app.domain.entities.user_role import UserRole
 from app.domain.use_cases.user.list_users import ListUsersUseCase
@@ -10,7 +10,7 @@ from app.dependencies.use_cases import (
 )
 from app.security.authorization import require_role
 from app.services.audit_service import AuditService
-from app.dependencies.deps import get_audit_service
+from app.dependencies.deps import get_audit_service, settings
 from app.domain.event_type import EventType
 from app.security.dependencies import (
     get_current_active_user,
@@ -22,6 +22,11 @@ from app.schemas.auth import LoginRequest, TokenResponse
 
 from app.dependencies.use_cases import get_login_user_use_case
 from app.security.jwt import create_access_token
+from app.core.rate_limit import limiter
+
+from app.core.safe_task import safe_task
+
+cfg = settings()
 
 # ---------------------------------------------------------------------
 # Public routes (no authentication)
@@ -38,7 +43,9 @@ public_router = APIRouter(
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
 )
+@limiter.limit("5/minute")
 async def register_user(
+    request: Request,
     user_data: UserRegisterRequest,
     background_tasks: BackgroundTasks,
     use_case: RegisterUserUseCase = Depends(get_register_user_use_case),
@@ -54,6 +61,7 @@ async def register_user(
     )
 
     background_tasks.add_task(
+        safe_task,
         audit_service.log_event,
         user_id=user.id,
         event_type=EventType.USER_REGISTERED,
@@ -63,7 +71,9 @@ async def register_user(
 
 
 @public_router.post("/login", response_model=TokenResponse)
+@limiter.limit(cfg.login_rate_limit)
 async def login(
+    request: Request,  # ✅ REQUIRED for SlowAPI
     data: LoginRequest,
     background_tasks: BackgroundTasks,
     use_case: LoginUserUseCase = Depends(get_login_user_use_case),
@@ -82,6 +92,7 @@ async def login(
     token = create_access_token(user)
 
     background_tasks.add_task(
+        safe_task,
         audit_service.log_login,
         user.id,
     )
