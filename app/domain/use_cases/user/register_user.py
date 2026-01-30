@@ -1,6 +1,7 @@
 import logging
 from uuid import uuid4
 
+from app.core.tracer import traced
 from app.domain.entities.user import User
 from app.domain.entities.user_role import UserRole
 from app.domain.interfaces.user_repository import UserRepository
@@ -15,6 +16,7 @@ class RegisterUserUseCase:
     def __init__(self, user_repo: UserRepository):
         self.user_repo = user_repo
 
+    @traced("usecase.register_user")
     async def execute(
         self,
         email: str,

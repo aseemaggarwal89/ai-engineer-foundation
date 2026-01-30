@@ -1,5 +1,6 @@
 import logging
 from typing import List
+from app.core.tracer import traced
 from app.domain.interfaces.user_repository import UserRepository
 from app.domain.entities.user import User
 
@@ -15,6 +16,7 @@ class ListUsersUseCase:
     def __init__(self, user_repo: UserRepository):
         self.user_repo = user_repo
 
+    @traced("usecase.list_users")
     async def execute(self) -> List[User]:
         """
         Retrieve all users.

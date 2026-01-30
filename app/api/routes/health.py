@@ -4,15 +4,19 @@ from fastapi import APIRouter, Depends
 from app.db.models.health import HealthResponse
 from app.domain.entities.user import User
 from app.security.dependencies import get_current_user
-from app.domain.use_cases.health.check_health_status import CheckHealthStatusUseCase
-from app.dependencies.use_cases import get_check_health_status_use_case
+from app.dependencies.use_cases import (
+    get_check_health_status_use_case,
+    get_liveness_usecase,
+    get_readiness_usecase,
+    get_deep_health_usecase,
+)
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------
 # Public routes (no authentication)
 # ---------------------------------------------------------------------
 
-public_router = APIRouter()
+public_router = APIRouter(prefix="/health", tags=["health"])
 
 
 @public_router.get("/")
@@ -23,6 +27,23 @@ async def root():
     """
     return {"message": "FastAPI service is running"}
 
+
+@public_router.get("/live")
+async def liveness(usecase=Depends(get_liveness_usecase)):
+    logger.debug("Liveness endpoint hit")
+    return await usecase.execute()
+
+
+@public_router.get("/ready")
+async def readiness(usecase=Depends(get_readiness_usecase)):
+    logger.info("Readiness endpoint hit")
+    return await usecase.execute()
+
+
+@public_router.get("/deep")
+async def deep_health(usecase=Depends(get_deep_health_usecase)):
+    logger.info("Deep health endpoint hit")
+    return await usecase.execute()
 
 # ---------------------------------------------------------------------
 # Protected routes (authentication required)
@@ -38,7 +59,7 @@ protected_router = APIRouter(
     response_model=HealthResponse,
 )
 async def health_check(
-    use_case: CheckHealthStatusUseCase = Depends(get_check_health_status_use_case),
+    use_case=Depends(get_check_health_status_use_case),
     user: User = Depends(get_current_user),
 ) -> HealthResponse:
     """

@@ -13,6 +13,8 @@ from app.api.routes.admin import (
     admin_router as admin_router
 )
 
+from app.api.routes.metrics import router as metrics_router
+
 
 def addRouters(app: FastAPI) -> None:
     """
@@ -26,6 +28,9 @@ def addRouters(app: FastAPI) -> None:
         # Health
         health_public_router,
         health_protected_router,
+
+        # Metrics
+        metrics_router,
 
         # Auth
         auth_public_router,

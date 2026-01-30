@@ -1,5 +1,6 @@
 import logging
 from uuid import UUID
+from app.core.tracer import traced
 from app.domain.interfaces.user_repository import UserRepository
 from app.domain.entities.user import User
 from app.domain.exceptions.exceptions import NotFoundError
@@ -12,6 +13,7 @@ class GetCurrentUserUseCase:
     def __init__(self, user_repo: UserRepository):
         self.user_repo = user_repo
 
+    @traced("usecase.get_current_user")
     async def execute(self, user_id: UUID | str) -> User:
         """
         Resolve the current authenticated user from the JWT payload.

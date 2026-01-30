@@ -12,6 +12,34 @@ from app.dependencies.repositories import (
     get_health_repository,
 )
 
+from app.domain.use_cases.health.check_health_status import (
+    LivenessCheckUseCase,
+    ReadinessCheckUseCase,
+    DeepHealthCheckUseCase,
+)
+
+
+def get_check_health_status_use_case(
+    repo: HealthRepository = Depends(get_health_repository),
+) -> CheckHealthStatusUseCase:
+    return CheckHealthStatusUseCase(repo)
+
+
+def get_liveness_usecase() -> LivenessCheckUseCase:
+    return LivenessCheckUseCase()
+
+
+def get_readiness_usecase(
+    repo: HealthRepository = Depends(get_health_repository),
+) -> ReadinessCheckUseCase:
+    return ReadinessCheckUseCase(repo)
+
+
+def get_deep_health_usecase(
+    repo: HealthRepository = Depends(get_health_repository),
+) -> DeepHealthCheckUseCase:
+    return DeepHealthCheckUseCase(repo)
+
 
 def get_register_user_use_case(
     user_repo: UserRepository = Depends(get_user_repository),
@@ -47,9 +75,3 @@ def get_list_users_use_case(
     Application wiring at the boundary.
     """
     return ListUsersUseCase(user_repo)
-
-
-def get_check_health_status_use_case(
-    repo: HealthRepository = Depends(get_health_repository),
-) -> CheckHealthStatusUseCase:
-    return CheckHealthStatusUseCase(repo)

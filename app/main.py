@@ -3,6 +3,8 @@
 import sys
 from pathlib import Path
 
+from app.core.metrics_middleware import MetricsMiddleware
+
 # 🔴 MUST BE FIRST
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.append(str(ROOT_DIR))
@@ -21,6 +23,8 @@ from app.core.exception_registry import addGlobalExceptionHandlers
 from app.api.routers import addRouters
 from app.core.model_registry import ModelRegistry
 from app.core.middleware.request_id import RequestIDMiddleware
+
+from app.core.tracing import setup_tracing
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +53,8 @@ async def lifespan(app: FastAPI):
     
 def create_app() -> FastAPI:
     settings = get_settings()
+
+    # 1️⃣ Logging first (everything after uses it)
     setup_logging(settings.log_level)
     logger.info(
     "FastAPI service starting",
@@ -58,20 +64,38 @@ def create_app() -> FastAPI:
         "app_name": settings.app_name,
     },
     )
+
+    # 3️⃣ Create FastAPI app
     app = FastAPI(
         title=settings.app_name,
         debug=settings.environment == "local",
         lifespan=lifespan,
     )
 
+    # 2️⃣ Tracing second (captures startup + routes)
+    setup_tracing(app, settings.app_name)
+
+    # 4️⃣ Middleware (order matters)
+    # metrics wrapper
+    app.add_middleware(MetricsMiddleware)
+
+    # request id first → available to logs + traces
     app.add_middleware(RequestIDMiddleware)
+    # 5️⃣ Routers
     addRouters(app)
+
+    # 6️⃣ Global exception mapping
     addGlobalExceptionHandlers(app)
+    
     return app
 
+# -------------------------
+# ASGI entrypoint
+# -------------------------
 
 # ✅ THIS IS WHAT UVICORN IMPORTS
 app = create_app()
+
 
 async def main() -> None:
     settings = get_settings()

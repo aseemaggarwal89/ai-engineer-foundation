@@ -1,4 +1,5 @@
 import logging
+from app.core.tracer import traced
 from app.domain.interfaces.user_repository import UserRepository
 from app.domain.exceptions.exceptions import AuthenticationError
 from app.security.password import verify_password
@@ -14,6 +15,7 @@ class LoginUserUseCase:
     def __init__(self, user_repo: UserRepository):
         self._user_repo = user_repo
 
+    @traced("usecase.login_user")
     async def execute(self, email: str, password: str):
         # 1️⃣ Login attempt
         logger.info(

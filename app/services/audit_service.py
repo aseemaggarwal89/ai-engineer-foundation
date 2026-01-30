@@ -1,4 +1,5 @@
 import logging
+from app.core.tracer import traced
 from app.domain.audit_event import AuditEvent
 from app.domain.event_type import EventType
 from app.repositories.audit_repository import AuditRepository
@@ -13,6 +14,7 @@ class AuditService:
     async def log_login(self, user_id: str) -> None:
         await self.log_event(user_id, EventType.USER_LOGIN)
 
+    @traced("service.audit_log_event")
     async def log_event(self, user_id: str, event_type: EventType) -> None:
         # 1️⃣ Audit attempt (important but not noisy)
         logger.info(
