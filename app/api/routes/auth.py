@@ -43,7 +43,7 @@ public_router = APIRouter(
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
 )
-@limiter.limit("5/minute")
+@limiter.limit(cfg.login_rate_limit)
 async def register_user(
     request: Request,
     user_data: UserRegisterRequest,

@@ -1,18 +1,35 @@
+from functools import lru_cache
 from pydantic import BaseModel
 import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
 
 # Load .env into environment variables (only once at import time)
-load_dotenv()
+# load_dotenv()
 
 
-class Settings(BaseModel):
+class AISettings(BaseModel):
+    openai_api_key: str
+    model_name: str = "gpt-4.1"
+    temperature: float = 0.2
+    max_tokens: int = 512
+    ai_timeout_seconds: int = 20
+
+
+class Settings(BaseSettings):
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_nested_delimiter="__",   # Enables AI__ mapping
+        extra="ignore"
+    )
+
     # --------------------
     # App
     # --------------------
-    app_name: str
-    environment: str
-    log_level: str
+    app_name: str = "AI Engineer"
+    environment: str = "local"
+    log_level: str = "INFO"
 
     # --------------------
     # Database
@@ -20,44 +37,30 @@ class Settings(BaseModel):
     database_url: str
 
     # --------------------
-    # JWT / Authentication
+    # JWT
     # --------------------
     jwt_secret_key: str
-    jwt_algorithm: str
-    jwt_access_token_expire_minutes: int
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 30
 
     db_timeout_seconds: int = 3
     login_rate_limit: str = "5/minute"
 
+    # --------------------
+    # Nested AI config
+    # --------------------
+    ai: AISettings
 
+
+@lru_cache
 def get_settings() -> Settings:
-    return Settings(
-        # App
-        app_name=os.getenv("APP_NAME", "AI Engineer Foundation"),
-        environment=os.getenv("ENVIRONMENT", "local"),
-        log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
+    """
+    Cached settings instance.
+    Loads once per process → critical for performance.
+    """
+    return Settings()
 
-        # Database
-        database_url=os.getenv(
-            "DATABASE_URL",
-            "sqlite+aiosqlite:///./app.db",
-        ),
-
-        # JWT
-        jwt_secret_key=os.getenv(
-            "JWT_SECRET_KEY",
-            "CHANGE_ME_IN_PRODUCTION",
-        ),
-        jwt_algorithm=os.getenv(
-            "JWT_ALGORITHM",
-            "HS256",
-        ),
-        jwt_access_token_expire_minutes=int(
-            os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30")
-        ),
-    )
 # Why this is correct
-
 # load_dotenv() runs once
 
 # .env → OS environment
