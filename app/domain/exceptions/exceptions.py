@@ -78,3 +78,25 @@ class AuthorizationError(AppException):
     status_code = 403
     error_code = "FORBIDDEN"
     message = "Insufficient permissions"
+
+
+# -----------------------------
+# Request / Validation Errors
+# -----------------------------
+
+class BadRequestError(AppException):
+    status_code = 400
+    error_code = "BAD_REQUEST"
+    message = "Malformed request body"
+
+
+class RequestValidationError(AppException):
+    status_code = 422
+    error_code = "VALIDATION_ERROR"
+    message = "Invalid request payload"
+
+
+class PromptTooLargeError(AppException):
+    status_code = 413
+    error_code = "PROMPT_TOO_LARGE"
+    message = "Prompt exceeds allowed size"

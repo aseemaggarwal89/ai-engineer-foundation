@@ -3,7 +3,8 @@
 import sys
 from pathlib import Path
 
-from app.core.metrics_middleware import MetricsMiddleware
+from app.core.middleware.body_size import BodySizeLimitMiddleware
+from app.core.middleware.metrics_middleware import MetricsMiddleware
 
 # 🔴 MUST BE FIRST
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -67,6 +68,7 @@ def create_app() -> FastAPI:
         "event": "service_startup",
         "environment": settings.environment,
         "app_name": settings.app_name,
+        "model": settings.ai.model_name,
     },
     )
 
@@ -91,6 +93,12 @@ def create_app() -> FastAPI:
 
     # request id first → available to logs + traces
     app.add_middleware(RequestIDMiddleware)
+
+    app.add_middleware(
+    BodySizeLimitMiddleware,
+    max_body_size=settings.ai.max_request_bytes,
+    )
+    
     # 5️⃣ Routers
     addRouters(app)
 

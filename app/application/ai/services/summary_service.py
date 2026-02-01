@@ -18,14 +18,13 @@ class SummaryService:
         self.parser = parser
         self.settings = settings
 
-    async def summarize(self, text: str):
+    async def summarize(self, text: str) -> list[str]:
+        prompt_text = self.prompt.build(text)
 
-        built = self.prompt.build(text)
-
-        raw = await self.model.generate(
-            built,
+        raw_output = await self.model.generate(
+            prompt_text,
             temperature=self.settings.temperature,
-            max_tokens=self.settings.max_tokens
+            max_tokens=self.settings.max_tokens,
         )
 
-        return self.parser.parse(raw)
+        return self.parser.parse(raw_output)

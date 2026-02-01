@@ -1,10 +1,14 @@
 class SummaryPrompt:
+    """
+    Deterministic prompt builder.
+    """
 
     VERSION = "v1"
 
     def build(self, text: str) -> str:
         return f"""
-Summarize in 5 bullet points:
+Summarize the following text into 5 concise bullet points.
 
+Text:
 {text}
 """

@@ -13,6 +13,10 @@ from app.api.routes.admin import (
     admin_router as admin_router
 )
 
+from app.api.routes.ai import (
+    public_router as ai_router
+)
+
 from app.api.routes.metrics import router as metrics_router
 
 
@@ -37,7 +41,10 @@ def addRouters(app: FastAPI) -> None:
         auth_protected_router,
 
         # Admin
-        admin_router
+        admin_router,
+
+        # AI
+        ai_router
     ]
 
     for router in routers:

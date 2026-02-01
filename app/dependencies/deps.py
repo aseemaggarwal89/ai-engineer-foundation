@@ -67,13 +67,16 @@ def get_audit_service(
 def get_openai_client(
         ai_settings: AISettings = Depends(get_ai_settings),
 ):
-    return AsyncOpenAI(api_key=ai_settings.openai_api_key)
+    return AsyncOpenAI(api_key=ai_settings.openai_api_key,
+                       timeout=ai_settings.timeout_seconds,   # VERY important
+                       )
 
 
 def get_ai_model(
         ai_settings: AISettings = Depends(get_ai_settings),
+        client: AsyncOpenAI = Depends(get_openai_client)
 ):
-    return OpenAIAdapter(get_openai_client, ai_settings)
+    return OpenAIAdapter(client, ai_settings)
 
 
 def get_summary_service(
