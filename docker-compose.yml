@@ -1,6 +1,14 @@
 version: "3.9"
 
+networks:
+  ai_network:
+
+volumes:
+  pg_data:
+  ollama_data:
+
 services:
+
   postgres:
     image: postgres:16
     container_name: ai_engineer_postgres
@@ -13,6 +21,26 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_engineer_db_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ai_network
 
-volumes:
-  pg_data:
+  ollama:
+    image: ollama/ollama
+    container_name: ai_engineer_ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - ai_network
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

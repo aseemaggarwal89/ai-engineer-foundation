@@ -1,6 +1,6 @@
 from enum import Enum
 from functools import lru_cache
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 # from dotenv import load_dotenv
@@ -17,6 +17,22 @@ class Environment(str, Enum):
     LOCAL = "local"
     STAGING = "staging"
     PROD = "prod"
+# =========================================================
+# AI Provider Enum
+# =========================================================
+
+
+class AIProvider(str, Enum):
+    OPENAI = "openai"
+    OLLAMA = "ollama"
+
+    def get_model_name(self) -> str:
+        if self == AIProvider.OPENAI:
+            return "gpt-4.1-mini"
+        elif self == AIProvider.OLLAMA:
+            return "tinyllama"
+        else:
+            raise ValueError("Unsupported AI provider")
 
 # =========================================================
 # AI Settings
@@ -24,8 +40,16 @@ class Environment(str, Enum):
     
 
 class AISettings(BaseModel):
-    openai_api_key: str = "your_openai_api_key_here__"
-    model_name: str = "gpt-4.1"
+    provider: AIProvider = AIProvider.OLLAMA
+
+    # OpenAI
+    openai_api_key: str | None = "your_openai_api_key_here__"
+    model_name: str | None = None
+
+    # Ollama
+    ollama_base_url: str = "http://ollama:11434"
+    
+    # Common
     temperature: float = 0.2
     max_tokens: int = 512
     timeout_seconds: int = 20
@@ -40,6 +64,17 @@ class AISettings(BaseModel):
 
     # Transport guardrail
     max_request_bytes: int = 262_144  # 256 KB
+    
+    # -----------------------------
+    # Smart Defaults
+    # -----------------------------
+
+    @model_validator(mode="after")
+    def set_model_name(self):
+        if self.model_name != self.provider.get_model_name():
+            self.model_name = self.provider.get_model_name()
+
+        return self
     
     # -----------------------------
     # Validation

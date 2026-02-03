@@ -1,9 +1,11 @@
 from functools import lru_cache
 from fastapi import Depends
+import httpx
 from app.application.ai.parsers.bullet_parser import BulletParser
 from app.application.ai.prompts.summary_prompt import SummaryPrompt
 from app.application.ai.services.summary_service import SummaryService
-from app.core.config import AISettings, Settings, get_settings
+from app.core.config import AIProvider, AISettings, Settings, get_settings
+from app.infrastructure.ai.ollama_adapter import OllamaAdapter
 from app.infrastructure.ai.openai_adapter import OpenAIAdapter
 from app.services.audit_service import AuditService
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -72,11 +74,28 @@ def get_openai_client(
                        )
 
 
+def get_ollama_client(
+    ai_settings: AISettings = Depends(get_ai_settings),
+) -> httpx.AsyncClient:
+
+    return httpx.AsyncClient(
+        base_url=ai_settings.ollama_base_url,
+        timeout=ai_settings.timeout_seconds,
+    )
+
+
 def get_ai_model(
         ai_settings: AISettings = Depends(get_ai_settings),
-        client: AsyncOpenAI = Depends(get_openai_client)
+        client: AsyncOpenAI = Depends(get_openai_client),
+        ollama_client: httpx.AsyncClient = Depends(get_ollama_client),
 ):
-    return OpenAIAdapter(client, ai_settings)
+    if ai_settings.provider == AIProvider.OPENAI:
+        return OpenAIAdapter(client, ai_settings)
+
+    if ai_settings.provider == AIProvider.OLLAMA:
+        return OllamaAdapter(ollama_client, ai_settings)
+    
+    raise ValueError("Unsupported AI provider")
 
 
 def get_summary_service(
