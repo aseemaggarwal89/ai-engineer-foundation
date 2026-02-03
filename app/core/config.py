@@ -50,7 +50,7 @@ class AISettings(BaseModel):
     ollama_base_url: str = "http://ollama:11434"
     
     # Common
-    temperature: float = 0.2
+    temperature: float = 0.6
     max_tokens: int = 512
     timeout_seconds: int = 20
     max_input_chars: int = 10_000
