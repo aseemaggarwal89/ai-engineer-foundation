@@ -3,20 +3,15 @@ import logging
 from typing import Optional
 
 from openai import AsyncOpenAI, APIError, RateLimitError, APITimeoutError
-from app.core import tracer
+from app.core import timeout, tracer
 from app.core.config import AISettings
 from app.core.retry import infra_retry
-from app.domain.ai.ai_model_port import AIModelPort
+from app.dependencies.deps import settings
+from app.application.ai.domain.ai_model_port import AIModelPort
 from app.domain.exceptions.exceptions import ServiceError
-# from app.infrastructure.ai.ai_metrics import (
-#     ai_requests_total,
-#     ai_errors_total,
-#     ai_latency_seconds,
-#     ai_tokens_used_total,
-#     ai_prompt_size,   # ← recommended metric
-# )
 
 logger = logging.getLogger(__name__)
+cfg = settings()
 
 
 class OpenAIAdapter(AIModelPort):

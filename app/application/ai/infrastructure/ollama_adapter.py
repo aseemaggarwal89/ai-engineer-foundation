@@ -4,10 +4,11 @@ from typing import Optional
 
 import httpx
 
-from app.core import tracer
+from app.core import timeout, tracer
 from app.core.config import AISettings
 from app.core.retry import infra_retry
-from app.domain.ai.ai_model_port import AIModelPort
+from app.dependencies.deps import settings
+from app.application.ai.domain.ai_model_port import AIModelPort
 from app.domain.exceptions.exceptions import ServiceError
 
 logger = logging.getLogger(__name__)
@@ -15,9 +16,9 @@ logger = logging.getLogger(__name__)
 
 class OllamaAdapter(AIModelPort):
 
-    def __init__(self, client: httpx.AsyncClient, settings: AISettings):
+    def __init__(self, client: httpx.AsyncClient, ai_settings: AISettings):
         self.client = client
-        self.settings = settings
+        self.settings = ai_settings
         self.provider = "ollama"
 
     @infra_retry()

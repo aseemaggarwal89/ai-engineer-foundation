@@ -1,7 +1,7 @@
-from app.application.ai.parsers.bullet_parser import BulletParser
+from app.application.ai.core.bullet_parser import BulletParser
 from app.application.ai.prompts.summary_prompt import SummaryPrompt
 from app.core.config import AISettings
-from app.domain.ai.ai_model_port import AIModelPort
+from app.application.ai.domain.ai_model_port import AIModelPort
 
 
 class SummaryService:
@@ -26,5 +26,5 @@ class SummaryService:
             temperature=self.settings.temperature,
             max_tokens=self.settings.max_tokens,
         )
-
+        
         return self.parser.parse(raw_output)

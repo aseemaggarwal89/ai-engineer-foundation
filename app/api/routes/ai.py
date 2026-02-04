@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
-from app.dependencies.ai_parsers import parse_summary_request
-from app.schemas.ai_summary import SummaryRequest, SummaryResponse
+from app.application.ai.schemas.ai_summary import SummaryRequest, SummaryResponse
 from app.application.ai.services.summary_service import SummaryService
-from app.dependencies.deps import get_summary_service
+from app.application.ai.usecases.summarize_text import SummarizeTextUseCase
+from app.dependencies.ai_dependencies import get_summarize_use_case
 
 # ---------------------------------------------------------------------
 # Public routes (no authentication)
@@ -13,11 +13,12 @@ public_router = APIRouter(
 )
 
 
-@public_router.post("/summarize", response_model=SummaryResponse)
+@public_router.post("/summarize", 
+                    response_model=SummaryResponse)
 async def summarize(
-    req: SummaryRequest = Depends(parse_summary_request),
-    svc: SummaryService = Depends(get_summary_service),
+    request: SummaryRequest = SummaryRequest,
+    use_case: SummarizeTextUseCase = Depends(get_summarize_use_case),
 ):
-    bullets = await svc.summarize(req.text)
+    bullets = await use_case.execute(request.text)
 
     return SummaryResponse(bullets=bullets)
