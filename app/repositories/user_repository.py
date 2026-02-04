@@ -8,6 +8,7 @@ from app.core.retry import db_retry
 from app.db.models.user_orm import UserORM
 from app.dependencies.deps import settings
 from app.domain.entities.user import User
+from app.domain.exceptions.exceptions import ServiceError
 from app.domain.interfaces.user_repository import UserRepository
 from app.repositories.mappers.user_mapper import orm_to_domain_user
 
@@ -74,7 +75,7 @@ class SQLAlchemyUserRepository(UserRepository):
         orm_user = await self._session.get(UserORM, str(user.id))
 
         if orm_user is None:
-            raise ValueError("Cannot save non-existing user")
+            raise ServiceError("Cannot save non-existing user")
 
         orm_user.email = user.email
         orm_user.is_active = user.is_active

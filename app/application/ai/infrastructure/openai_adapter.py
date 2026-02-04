@@ -11,14 +11,14 @@ from app.application.ai.domain.ai_model_port import AIModelPort
 from app.domain.exceptions.exceptions import ServiceError
 
 logger = logging.getLogger(__name__)
-cfg = settings()
 
 
 class OpenAIAdapter(AIModelPort):
 
-    def __init__(self, client: AsyncOpenAI, settings: AISettings):
+    def __init__(self, client: AsyncOpenAI, 
+                 ai_settings: AISettings):
         self.client = client
-        self.settings = settings
+        self.settings = ai_settings
         self.provider = "openai"
 
     @infra_retry()

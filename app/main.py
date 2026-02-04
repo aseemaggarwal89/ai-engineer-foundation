@@ -3,6 +3,11 @@
 import sys
 from pathlib import Path
 
+import httpx
+from openai import AsyncOpenAI
+from openai import AsyncOpenAI
+
+from app.application.ai.core.container import ServiceContainer
 from app.core.middleware.body_size import BodySizeLimitMiddleware
 from app.core.middleware.metrics_middleware import MetricsMiddleware
 
@@ -40,20 +45,22 @@ async def lifespan(app: FastAPI):
     # Startup
     # --------------------
     logger.info("Application startup")
-    registry = ModelRegistry()
-    await registry.load()
-    app.state.model_registry = registry
+    settings = get_settings()
+    container = ServiceContainer(settings)
+    await container.startup()
+    app.state.container = container
 
     # logging.getLogger(__name__).info("Initializing database")
     # async with engine.begin() as conn:
     #     await conn.run_sync(Base.metadata.create_all)
 
+    # ✅ Create once
     yield  # Application runs here
 
     # --------------------
     # Shutdown (future use)
     # --------------------
-    await registry.close()
+    await container.shutdown()
     logger.info("Application shutdown")
 
     

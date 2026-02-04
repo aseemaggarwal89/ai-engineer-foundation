@@ -13,12 +13,13 @@ public_router = APIRouter(
 )
 
 
-@public_router.post("/summarize", 
+@public_router.post("/summarize",
                     response_model=SummaryResponse)
 async def summarize(
     request: SummaryRequest = SummaryRequest,
     use_case: SummarizeTextUseCase = Depends(get_summarize_use_case),
 ):
+    
     bullets = await use_case.execute(request.text)
 
     return SummaryResponse(bullets=bullets)

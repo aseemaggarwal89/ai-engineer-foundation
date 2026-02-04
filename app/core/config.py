@@ -3,6 +3,8 @@ from functools import lru_cache
 from pydantic import BaseModel, field_validator, model_validator
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from app.domain.exceptions.exceptions import ServiceError
 # from dotenv import load_dotenv
 # import os
 # Load .env into environment variables (only once at import time)
@@ -32,7 +34,7 @@ class AIProvider(str, Enum):
         elif self == AIProvider.OLLAMA:
             return "tinyllama"
         else:
-            raise ValueError("Unsupported AI provider")
+            raise ServiceError("Unsupported AI provider")
 
 # =========================================================
 # AI Settings
@@ -52,7 +54,7 @@ class AISettings(BaseModel):
     # Common
     temperature: float = 0.6
     max_tokens: int = 512
-    timeout_seconds: int = 20
+    timeout_seconds: int = 40
     max_input_chars: int = 10_000
     hard_reject_chars: int = 50_000
 
@@ -83,10 +85,10 @@ class AISettings(BaseModel):
     @classmethod
     def validate_openai_key(cls, v: str) -> str:
         if not v or v == "your_openai_api_key_here":
-            raise ValueError("OPENAI API key is not set")
+            raise ServiceError("OPENAI API key is not set")
 
         if not v.startswith("sk-"):
-            raise ValueError("Invalid OpenAI API key format")
+            raise ServiceError("Invalid OpenAI API key format")
 
         return v
 

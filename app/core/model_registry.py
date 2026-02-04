@@ -1,23 +1,43 @@
-import asyncio
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class ModelRegistry:
-    def __init__(self) -> None:
-        self._loaded = False
-        self.model = None
+    """
+    Holds model metadata + routing configuration.
+    """
 
-    async def load(self) -> None:
+    def __init__(self, settings):
+        self.settings = settings
+        self.models = {}
+
+    async def load(self):
+
         logger.info("Loading model registry...")
-        await asyncio.sleep(1)  # simulate I/O
-        self.model = {"status": "loaded"}
-        self._loaded = True
+
+        ai = self.settings.ai
+
+        # You can later load this from:
+        # - database
+        # - feature flags
+        # - config service
+        # - S3
+        # - LaunchDarkly
+
+        self.models = {
+            "summary": {
+                "provider": ai.provider,
+                "model_name": ai.model_name,
+                "fallback": "tinyllama",  # example
+            }
+        }
+
         logger.info("Model registry loaded")
 
-    async def close(self) -> None:
-        logger.info("Closing model registry...")
-        self.model = None
-        self._loaded = False
+    async def close(self):
         logger.info("Model registry closed")
+
+    # ⭐ Example resolver
+    def get_summary_config(self):
+        return self.models["summary"]
