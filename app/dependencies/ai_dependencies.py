@@ -2,13 +2,17 @@ from functools import lru_cache
 from fastapi import Depends, Request
 from openai import AsyncOpenAI
 import httpx
-from app.application.ai.core.ai_guardrails import AIGuardrails
+from app.application.ai.core.ai_reliability_pipeline import AIReliabilityPipeline
+from app.application.ai.validator.prompt_evaluator import PromptEvaluator
+from app.application.ai.validator.request.ai_guardrails import AIGuardrails
 from app.application.ai.core.bullet_parser import BulletParser
 from app.application.ai.core.container import ServiceContainer
 from app.application.ai.domain.ai_model_port import AIModelPort
 from app.application.ai.prompts.summary_prompt import SummaryPrompt
 from app.application.ai.services.summary_service import SummaryService
 from app.application.ai.usecases.summarize_text import SummarizeTextUseCase
+from app.application.ai.validator.response.response_scorer import AIResponseScorer
+from app.application.ai.validator.response.response_validator import AIResponseValidator
 from app.core.config import AISettings, Settings, get_settings, AIProvider
 from app.application.ai.infrastructure.openai_adapter import OpenAIAdapter
 from app.application.ai.infrastructure.ollama_adapter import OllamaAdapter
@@ -33,16 +37,25 @@ def get_ai_settings(
 
 def get_summary_service(
     model=Depends(resolve_summary_model),
+    container=Depends(get_container),
     ai_settings: AISettings = Depends(get_ai_settings),
 ) -> SummaryService:
     return SummaryService(
-        model=model, prompt=SummaryPrompt(), parser=BulletParser(), settings=ai_settings
+        model=model,
+        prompt=SummaryPrompt(),
+        parser=BulletParser(),
+        evaluator=container.prompt_evaluator,
+        settings=ai_settings
     )
 
 
 def get_summarize_use_case(
     svc: SummaryService = Depends(get_summary_service),
+    container=Depends(get_container),
     ai_settings: AISettings = Depends(get_ai_settings),
 ) -> SummarizeTextUseCase:
-    ai_guard: AIGuardrails = AIGuardrails(ai_settings)
-    return SummarizeTextUseCase(ai_guard, svc)
+    return SummarizeTextUseCase(
+        guardrails=container.guardrails,
+        reliability_pipeline=container.reliability_pipeline,
+        summary_service=svc
+    )

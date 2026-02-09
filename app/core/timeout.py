@@ -3,24 +3,21 @@ from functools import wraps
 from app.domain.exceptions.exceptions import ServiceError
 
 
-def timeout(seconds: float):
+def timeout_from_self(func):
     """
     Decorator to enforce timeout on async functions.
     """
 
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            try:
-                return await asyncio.wait_for(
-                    func(*args, **kwargs),
-                    timeout=seconds,
-                )
-            except asyncio.TimeoutError:
-                raise ServiceError(
-                    f"{func.__name__} timed out after {seconds}s"
-                )
-
-        return wrapper
-
-    return decorator
+    @wraps(func)
+    async def wrapper(self, *args, **kwargs):
+        try:
+            return await asyncio.wait_for(
+                func(self, *args, **kwargs),
+                timeout=self.timeout_seconds,
+            )
+        except asyncio.TimeoutError:
+            raise ServiceError(
+                f"{func.__name__} timed out after {self.timeout_seconds}s"
+            )
+        
+    return wrapper

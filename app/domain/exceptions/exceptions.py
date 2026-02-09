@@ -100,3 +100,34 @@ class PromptTooLargeError(AppException):
     status_code = 413
     error_code = "PROMPT_TOO_LARGE"
     message = "Prompt exceeds allowed size"
+
+
+class AIError(AppException):
+    """
+    Base exception for AI inference failures.
+    """
+
+    status_code = 502   # ⭐ Important
+    error_code = "AI_ERROR"
+    message = "AI inference failed"
+
+
+class ResponseValidationError(AIError):
+    """
+    Raised when the AI response fails validation checks.
+    """
+
+    status_code = 502
+    error_code = "INVALID_AI_RESPONSE"
+    message = "AI returned an invalid response"
+
+
+class ModelRefusalError(AIError):
+    status_code = 502
+    error_code = "MODEL_REFUSAL"
+    message = "Model refused to answer"
+
+class LowConfidenceError(AIError):
+    status_code = 502
+    error_code = "LOW_CONFIDENCE_RESPONSE"
+    message = "AI response confidence too low"

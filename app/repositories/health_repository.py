@@ -1,19 +1,21 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.core.timeout import timeout
+from app.core.config import Settings
+from app.core.timeout import timeout, timeout_from_self
 from app.dependencies.deps import settings
 from app.domain.interfaces.health_repository import HealthRepository
 from app.db.models.health import HealthStatus
 
-cfg = settings()
-
 
 class HealthRepositoryImpl(HealthRepository):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession,
+                 app_settings: Settings):
         self._session = session
-    
-    @timeout(seconds=cfg.db_timeout_seconds)
+        self.timeout_seconds = app_settings.db_timeout_seconds
+
+    @timeout_from_self
     async def fetch_status(self) -> str:
+
         result = await self._session.execute(select(HealthStatus).limit(1))
         row = result.scalar_one_or_none()
 
