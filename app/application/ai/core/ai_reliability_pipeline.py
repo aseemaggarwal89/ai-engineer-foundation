@@ -1,3 +1,4 @@
+from app.application.ai.core.bullet_parser import BulletParser
 from app.application.ai.validator.request.ai_safety import AISafetyFilter
 from app.application.ai.validator.response.hallucination_guard import HallucinationGuard
 from app.application.ai.validator.response.response_scorer import AIResponseScorer
@@ -11,17 +12,24 @@ class AIReliabilityPipeline:
         hallucination_guard: HallucinationGuard,
         validator: AIResponseValidator,
         scorer: AIResponseScorer,
+        parser: BulletParser,
     ):
         self.hallucination_guard = hallucination_guard
         self.validator = validator
         self.scorer = scorer
+        self.parser = parser
 
-    async def run(self, response):
+    def run(self, response):
+        # raw text
+        self.validator.validate(response)
+        # parsed + structured
+        bullets = self.parser.parse(response)
+        # bullet validation
+        response = self.validator.validate_bullets(bullets)
 
-        response = self.validator.validate_bullets(response)
-        self.hallucination_guard.check(response)
+        # hallucination detection
+        self.hallucination_guard.check_bullets(response)
+
+        # score
         score = self.scorer.score_bullets(response)
-        if score < 0.6:
-            raise ResponseValidationError("Low confidence AI output")
-
         return response, score

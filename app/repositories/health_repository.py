@@ -1,8 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.config import Settings
-from app.core.timeout import timeout, timeout_from_self
-from app.dependencies.deps import settings
+from app.core.timeout import timeout_from_self
 from app.domain.interfaces.health_repository import HealthRepository
 from app.db.models.health import HealthStatus
 

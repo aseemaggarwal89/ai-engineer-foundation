@@ -112,6 +112,16 @@ class AIError(AppException):
     message = "AI inference failed"
 
 
+class AIProviderError(AIError):
+    """
+    Raised when an external AI provider fails.
+
+    Safe to trigger fallback.
+    """
+    error_code = "AI_PROVIDER_ERROR"
+    message = "AI provider failure"
+
+
 class ResponseValidationError(AIError):
     """
     Raised when the AI response fails validation checks.
@@ -126,6 +136,7 @@ class ModelRefusalError(AIError):
     status_code = 502
     error_code = "MODEL_REFUSAL"
     message = "Model refused to answer"
+
 
 class LowConfidenceError(AIError):
     status_code = 502

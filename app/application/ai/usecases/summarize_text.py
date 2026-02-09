@@ -6,8 +6,7 @@ from app.application.ai.validator.response.hallucination_guard import Hallucinat
 from app.application.ai.validator.response.response_scorer import AIResponseScorer
 from app.application.ai.validator.response.response_validator import AIResponseValidator
 from app.core.config import AISettings
-from app.core.timeout import timeout, timeout_from_self
-from app.domain.exceptions.exceptions import ResponseValidationError
+from app.core.timeout import timeout_from_self
 
 
 class SummarizeTextUseCase:
@@ -16,13 +15,11 @@ class SummarizeTextUseCase:
         self,
         guardrails: AIGuardrails,
         safety: AISafetyFilter,
-        reliability_pipeline: AIReliabilityPipeline,
         summary_service: SummaryService,
         ai_settings: AISettings,
     ):
         self.guardrails = guardrails
         self.safety = safety
-        self.reliability_pipeline = reliability_pipeline
         self.summary_service = summary_service
         self.timeout_seconds = ai_settings.timeout_seconds
 
@@ -30,17 +27,8 @@ class SummarizeTextUseCase:
     async def execute(self, text: str) -> list[str]:
         # 🔥 Layer 7 protections
         self.safety.check(text)
-        self.guardrails.validate_prompt(text)
-        try:
-            bullets = await self.summary_service.summarize(text)
+        text = self.guardrails.validate_prompt(text)
 
-        except Exception:
-            if not self.fallback_service:
-                raise
+        bullets = await self.summary_service.summarize(text)
 
-        # Zero-trust boundary
-        validatedResponse, score = self.reliability_pipeline.run(response=bullets)
-        if score < 0.6:
-            raise ResponseValidationError("Low confidence AI output")
-
-        return validatedResponse
+        return bullets

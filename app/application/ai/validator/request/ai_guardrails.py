@@ -13,7 +13,7 @@ class AIGuardrails:
     def __init__(self, settings: AISettings):
         self.settings = settings
 
-    def validate_prompt(self, text: str) -> None:
+    def validate_prompt(self, text: str) -> str:
         if not text or not text.strip():
             raise BadRequestError("Prompt cannot be empty")
         HARD_LIMIT = self.settings.hard_prompt_limit

@@ -1,7 +1,7 @@
 from openai import AsyncOpenAI
 import httpx
-
 from app.application.ai.core.ai_reliability_pipeline import AIReliabilityPipeline
+from app.application.ai.infrastructure.fallback_model_router import FallbackModelRouter
 from app.application.ai.validator.prompt_evaluator import PromptEvaluator
 from app.application.ai.validator.request.ai_guardrails import AIGuardrails
 from app.application.ai.core.bullet_parser import BulletParser
@@ -13,7 +13,7 @@ from app.application.ai.validator.response.hallucination_guard import Hallucinat
 from app.application.ai.validator.request.ai_safety import AISafetyFilter
 from app.application.ai.validator.response.response_scorer import AIResponseScorer
 from app.application.ai.validator.response.response_validator import AIResponseValidator
-from app.core.config import AIProvider, Settings
+from app.core.config import AIProvider, AISettings, Settings
 from app.core.model_registry import ModelRegistry
 from app.domain.exceptions.exceptions import ServiceError
 
@@ -44,6 +44,8 @@ class ServiceContainer:
             timeout=self.ai_settings.timeout_seconds,
         )
 
+        self.openai_adapter = OpenAIAdapter(self.openai_client, self.ai_settings)
+        self.ollama_adapter = OllamaAdapter(self.ollama_client, self.ai_settings)
         # -------------------------
         # AI Response Componenets
         # -------------------------
@@ -51,7 +53,7 @@ class ServiceContainer:
         self.guardrails = AIGuardrails(self.ai_settings)
         self.summary_prompt = SummaryPrompt()
         self.bullet_parser = BulletParser()
-
+        self.safety_filter = AISafetyFilter()
         # -------------------------
         # Registry + Router
         # -------------------------
@@ -61,26 +63,37 @@ class ServiceContainer:
         # -------------------------
         # AI Validation
         # -------------------------
-
         self.reliability_pipeline = AIReliabilityPipeline(
-            safety=AISafetyFilter(),
             hallucination_guard=HallucinationGuard(),
             validator=AIResponseValidator(),
             scorer=AIResponseScorer(),
+            parser=self.bullet_parser,
         )
-    
+
+        self.router = FallbackModelRouter(
+            primary=self.ollama_adapter,
+            fallback=self.openai_adapter,
+            reliability_pipeline=self.reliability_pipeline,
+            threshold=0.65,
+        )
+
     def get_ai_model(self) -> AIModelPort:
-        if self.ai_settings.provider == AIProvider.OPENAI:
-            return OpenAIAdapter(
-                self.openai_client,
-                self.ai_settings,
-            )
-        if self.ai_settings.provider == AIProvider.OLLAMA:
-            return OllamaAdapter(
-                self.ollama_client,
-                self.ai_settings,
-            )
-        raise ServiceError("Unsupported AI provider")
+        # Example strategy:
+        # cheap local first → smart cloud fallback
+        return self.router
+
+    # def get_primary_model(self) -> AIModelPort:
+    #     if self.ai_settings.provider == AIProvider.OPENAI:
+    #         return OpenAIAdapter(
+    #             self.openai_client,
+    #             self.ai_settings,
+    #         )
+    #     if self.ai_settings.provider == AIProvider.OLLAMA:
+    #         return OllamaAdapter(
+    #             self.ollama_client,
+    #             self.ai_settings,
+    #         )
+    #     raise ServiceError("Unsupported AI provider")
 
     # 🔥 IMPORTANT
     async def startup(self):

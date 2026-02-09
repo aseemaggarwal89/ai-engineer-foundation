@@ -8,7 +8,7 @@ from app.core.config import AISettings
 from app.core.retry import infra_retry
 from app.dependencies.deps import settings
 from app.application.ai.domain.ai_model_port import AIModelPort
-from app.domain.exceptions.exceptions import ServiceError
+from app.domain.exceptions.exceptions import AIProviderError
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ class OpenAIAdapter(AIModelPort):
                     },
                 )
 
-                raise ServiceError("AI model returned empty response")
+                raise AIProviderError("AI model returned empty response")
 
             return output_text
 
@@ -90,7 +90,7 @@ class OpenAIAdapter(AIModelPort):
                 extra={"provider": self.provider, "model": model},
             )
 
-            raise ServiceError(
+            raise AIProviderError(
                 "AI provider rate limit exceeded"
             ) from exc
 
@@ -100,7 +100,7 @@ class OpenAIAdapter(AIModelPort):
                 extra={"provider": self.provider, "model": model},
             )
 
-            raise ServiceError(
+            raise AIProviderError(
                 "AI provider timeout"
             ) from exc
 
@@ -110,7 +110,7 @@ class OpenAIAdapter(AIModelPort):
                 extra={"provider": self.provider, "model": model},
             )
 
-            raise ServiceError(
+            raise AIProviderError(
                 "AI provider failure"
             ) from exc
 
@@ -123,6 +123,6 @@ class OpenAIAdapter(AIModelPort):
                 "error": str(exc),   # 🔥 critical
             },
             )
-            raise ServiceError(
+            raise AIProviderError(
                 "AI inference failed"
             ) from exc

@@ -9,7 +9,7 @@ from app.core.config import AISettings
 from app.core.retry import infra_retry
 from app.dependencies.deps import settings
 from app.application.ai.domain.ai_model_port import AIModelPort
-from app.domain.exceptions.exceptions import ServiceError
+from app.domain.exceptions.exceptions import AIProviderError
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class OllamaAdapter(AIModelPort):
                     },
                 )
 
-                raise ServiceError("AI model returned empty response")
+                raise AIProviderError("AI model returned empty response")
 
             return output_text.strip()
 
@@ -103,7 +103,7 @@ class OllamaAdapter(AIModelPort):
                 extra={"provider": self.provider, "model": model},
             )
 
-            raise ServiceError(
+            raise AIProviderError(
                 "AI provider timeout"
             ) from exc
 
@@ -117,7 +117,7 @@ class OllamaAdapter(AIModelPort):
                 },
             )
 
-            raise ServiceError(
+            raise AIProviderError(
                 "AI provider failure"
             ) from exc
 
@@ -127,7 +127,7 @@ class OllamaAdapter(AIModelPort):
                 extra={"provider": self.provider, "model": model},
             )
 
-            raise ServiceError(
+            raise AIProviderError(
                 "AI transport failure"
             ) from exc
 
@@ -141,6 +141,6 @@ class OllamaAdapter(AIModelPort):
                 },
             )
 
-            raise ServiceError(
+            raise AIProviderError(
                 "AI inference failed"
             ) from exc

@@ -11,29 +11,24 @@ class SummaryService:
         self,
         model: AIModelPort,
         prompt: SummaryPrompt,
-        parser: BulletParser,
-        evaluator: PromptEvaluator,
         settings: AISettings
     ):
         self.model = model
         self.prompt = prompt
-        self.parser = parser
-        self.evaluator = evaluator
         self.settings = settings
 
     async def summarize(self, text: str) -> list[str]:
         prompt_text = self.prompt.build(text)
-
-        raw_output = await self.model.generate(
+        valid_output = await self.model.generate(
             prompt_text,
             temperature=self.settings.temperature,
             max_tokens=self.settings.max_tokens,
         )
 
-        # observability
-        self.evaluator.evaluate(
-            prompt_version=self.prompt.VERSION,
-            output=raw_output,
-        )
+        # # observability
+        # self.evaluator.evaluate(
+        #     prompt_version=self.prompt.VERSION,
+        #     output=raw_output,
+        # )
         
-        return self.parser.parse(raw_output)
+        return valid_output

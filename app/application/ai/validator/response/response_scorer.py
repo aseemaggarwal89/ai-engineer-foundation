@@ -5,7 +5,9 @@ class AIResponseScorer:
     """
 
     def score_bullets(self, bullets: list[str]) -> float:
-
+        if not bullets:
+            return 0.0
+        
         avg_len = sum(len(b) for b in bullets) / len(bullets)
 
         score = 0.5
