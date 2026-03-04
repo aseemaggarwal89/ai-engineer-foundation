@@ -17,7 +17,7 @@ class SummaryService:
         self.prompt = prompt
         self.settings = settings
 
-    async def summarize(self, text: str) -> list[str]:
+    async def summarize(self, text: str) -> str:
         prompt_text = self.prompt.build(text)
         valid_output = await self.model.generate(
             prompt_text,

@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 
 import httpx
+import pybreaker
 
 from app.core import timeout, tracer
 from app.core.config import AISettings
@@ -16,10 +17,13 @@ logger = logging.getLogger(__name__)
 
 class OllamaAdapter(AIModelPort):
 
-    def __init__(self, client: httpx.AsyncClient, ai_settings: AISettings):
+    def __init__(self, client: httpx.AsyncClient, 
+                 ai_settings: AISettings,
+                 breaker: pybreaker.CircuitBreaker):
         self.client = client
         self.settings = ai_settings
         self.provider = "ollama"
+        self.breaker = breaker
 
     @infra_retry()
     @tracer.traced("ai.generate")
@@ -27,6 +31,27 @@ class OllamaAdapter(AIModelPort):
         self,
         prompt: str,
         *,
+        temperature: float,
+        max_tokens: int,
+    ) -> str:
+        try:
+            return await self.breaker.call_async(
+                self._generate,
+                prompt,
+                temperature,
+                max_tokens,
+            )
+
+        except pybreaker.CircuitBreakerError:
+            logger.warning(
+                "ai_circuit_open",
+                extra={"provider": self.provider},
+            )
+            raise AIProviderError("Ollama circuit open")
+    
+    async def _generate(
+        self,
+        prompt: str,
         temperature: float,
         max_tokens: int,
     ) -> str:

@@ -6,7 +6,7 @@ from app.domain.exceptions.exceptions import AIProviderError, ResponseValidation
 logger = logging.getLogger(__name__)
 
 
-class FallbackModelRouter(AIModelPort):
+class InferenceRouter(AIModelPort):
 
     def __init__(
         self,

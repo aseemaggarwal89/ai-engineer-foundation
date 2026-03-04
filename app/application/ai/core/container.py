@@ -1,7 +1,7 @@
 from openai import AsyncOpenAI
 import httpx
 from app.application.ai.core.ai_reliability_pipeline import AIReliabilityPipeline
-from app.application.ai.infrastructure.fallback_model_router import FallbackModelRouter
+from app.application.ai.infrastructure.fallback_model_router import InferenceRouter
 from app.application.ai.validator.prompt_evaluator import PromptEvaluator
 from app.application.ai.validator.request.ai_guardrails import AIGuardrails
 from app.application.ai.core.bullet_parser import BulletParser
@@ -16,6 +16,10 @@ from app.application.ai.validator.response.response_validator import AIResponseV
 from app.core.config import AIProvider, AISettings, Settings
 from app.core.model_registry import ModelRegistry
 from app.domain.exceptions.exceptions import ServiceError
+from app.application.ai.core.circuit_breakers import (
+    ollama_breaker,
+    openai_breaker,
+)
 
 
 class ServiceContainer:
@@ -44,8 +48,12 @@ class ServiceContainer:
             timeout=self.ai_settings.timeout_seconds,
         )
 
-        self.openai_adapter = OpenAIAdapter(self.openai_client, self.ai_settings)
-        self.ollama_adapter = OllamaAdapter(self.ollama_client, self.ai_settings)
+        self.openai_adapter = OpenAIAdapter(self.openai_client, 
+                                            self.ai_settings, 
+                                            openai_breaker)
+        self.ollama_adapter = OllamaAdapter(self.ollama_client, 
+                                            self.ai_settings, 
+                                            ollama_breaker)
         # -------------------------
         # AI Response Componenets
         # -------------------------
@@ -70,7 +78,7 @@ class ServiceContainer:
             parser=self.bullet_parser,
         )
 
-        self.router = FallbackModelRouter(
+        self.router = InferenceRouter(
             primary=self.ollama_adapter,
             fallback=self.openai_adapter,
             reliability_pipeline=self.reliability_pipeline,
