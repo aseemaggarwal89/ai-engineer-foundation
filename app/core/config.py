@@ -4,6 +4,8 @@ from pydantic import BaseModel, field_validator, model_validator
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.application.ai.domain.ai_provider import AIProvider
+from app.application.ai.domain.model_registry import ModelRegistrySettings
 from app.domain.exceptions.exceptions import ServiceError
 # from dotenv import load_dotenv
 # import os
@@ -19,23 +21,6 @@ class Environment(str, Enum):
     LOCAL = "local"
     STAGING = "staging"
     PROD = "prod"
-# =========================================================
-# AI Provider Enum
-# =========================================================
-
-
-class AIProvider(str, Enum):
-    OPENAI = "openai"
-    OLLAMA = "ollama"
-
-    def get_model_name(self) -> str:
-        if self == AIProvider.OPENAI:
-            return "gpt-4.1-mini"
-        elif self == AIProvider.OLLAMA:
-            return "tinyllama"
-        else:
-            raise ServiceError("Unsupported AI provider")
-
 # =========================================================
 # AI Settings
 # =========================================================
@@ -58,6 +43,7 @@ class AISettings(BaseModel):
     max_input_chars: int = 10_000
     hard_reject_chars: int = 50_000
 
+    model_registry: ModelRegistrySettings | None = None
     # Guardrails
     max_input_chars: int = 10_000
     hard_reject_chars: int = 50_000

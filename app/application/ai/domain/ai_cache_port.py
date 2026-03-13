@@ -1,0 +1,13 @@
+from abc import ABC, abstractmethod
+from typing import Optional
+
+
+class AIResponseCachePort(ABC):
+
+    @abstractmethod
+    async def get(self, key: str) -> Optional[str]:
+        ...
+
+    @abstractmethod
+    async def set(self, key: str, value: str, ttl: int) -> None:
+        ...

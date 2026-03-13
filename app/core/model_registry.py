@@ -1,43 +1,51 @@
 import logging
+from typing import Dict
+from app.application.ai.domain.ai_capability import AICapability
+from app.application.ai.domain.ai_model_port import AIModelPort
+from app.application.ai.domain.model_registry import ModelRoute
+from app.core.config import AISettings
 
 logger = logging.getLogger(__name__)
 
 
 class ModelRegistry:
     """
-    Holds model metadata + routing configuration.
+    Central place that maps AI capabilities to models.
     """
 
-    def __init__(self, settings):
-        self.settings = settings
-        self.models = {}
+    def __init__(self, aisettings: AISettings):
+
+        self.aisettings = aisettings
+        self._adapters: Dict[str, AIModelPort] = {}
+        self._mapping: Dict[AICapability, ModelRoute] = {}
 
     async def load(self):
+        config = self.aisettings.model_registry
+        if not config:
+            logger.warning("model_registry_not_configured")
+            return
 
-        logger.info("Loading model registry...")
+        self._mapping[AICapability.SUMMARIZATION] = config.summarization
+        if config.chat:
+            self._mapping[AICapability.CHAT] = config.chat
+            
+    def register_adapter(self, name: str, adapter: AIModelPort):
+        self._adapters[name] = adapter
 
-        ai = self.settings.ai
+    def get_primary(self, capability: AICapability) -> AIModelPort:
 
-        # You can later load this from:
-        # - database
-        # - feature flags
-        # - config service
-        # - S3
-        # - LaunchDarkly
+        route = self._mapping[capability]
 
-        self.models = {
-            "summary": {
-                "provider": ai.provider,
-                "model_name": ai.model_name,
-                "fallback": "tinyllama",  # example
-            }
-        }
+        return self._adapters[route.primary]
 
-        logger.info("Model registry loaded")
+    def get_fallback(self, capability: AICapability) -> AIModelPort:
+
+        route = self._mapping[capability]
+
+        if route.fallback:
+            return self._adapters[route.fallback]
+
+        return None
 
     async def close(self):
-        logger.info("Model registry closed")
-
-    # ⭐ Example resolver
-    def get_summary_config(self):
-        return self.models["summary"]
+        self._adapters.clear()

@@ -16,9 +16,12 @@ logger = logging.getLogger(__name__)
 
 class OpenAIAdapter(AIModelPort):
 
-    def __init__(self, client: AsyncOpenAI,
-                 ai_settings: AISettings,
-                 breaker: pybreaker.CircuitBreaker):
+    def __init__(
+        self,
+        client: AsyncOpenAI,
+        ai_settings: AISettings,
+        breaker: pybreaker.CircuitBreaker,
+    ):
         self.client = client
         self.settings = ai_settings
         self.provider = "openai"
@@ -28,32 +31,27 @@ class OpenAIAdapter(AIModelPort):
     @tracer.traced("ai.generate")
     async def generate(
         self,
-        prompt: str,
         *,
+        prompt: str,
         temperature: float,
         max_tokens: int
     ) -> str:
-        try:
-            return await self.breaker.call_async(
-                self._generate,
-                prompt,
-                temperature,
-                max_tokens,
-            )
-
-        except pybreaker.CircuitBreakerError:
+        if not self.breaker.allow_request():
             logger.warning(
-                "ai_circuit_open",
+                "ai_circuit_prevented_request",
                 extra={"provider": self.provider},
             )
             raise AIProviderError("OpenAI circuit open")
-                
-    async def _generate(
-        self,
-        prompt: str,
-        temperature: float,
-        max_tokens: int
-    ) -> str:
+        
+        try:
+            result = await self._generate(prompt=prompt, temperature=temperature, max_tokens=max_tokens)
+            self.breaker.record_success()
+            return result
+        except Exception:
+            self.breaker.record_failure()
+            raise
+
+    async def _generate(self, *, prompt: str, temperature: float, max_tokens: int) -> str:
 
         model = self.settings.model_name
         start = time.perf_counter()
@@ -114,9 +112,7 @@ class OpenAIAdapter(AIModelPort):
                 extra={"provider": self.provider, "model": model},
             )
 
-            raise AIProviderError(
-                "AI provider rate limit exceeded"
-            ) from exc
+            raise AIProviderError("AI provider rate limit exceeded") from exc
 
         except APITimeoutError as exc:
             logger.exception(
@@ -124,9 +120,7 @@ class OpenAIAdapter(AIModelPort):
                 extra={"provider": self.provider, "model": model},
             )
 
-            raise AIProviderError(
-                "AI provider timeout"
-            ) from exc
+            raise AIProviderError("AI provider timeout") from exc
 
         except APIError as exc:
             logger.exception(
@@ -134,19 +128,15 @@ class OpenAIAdapter(AIModelPort):
                 extra={"provider": self.provider, "model": model},
             )
 
-            raise AIProviderError(
-                "AI provider failure"
-            ) from exc
+            raise AIProviderError("AI provider failure") from exc
 
         except Exception as exc:
             logger.exception(
-            "ai_unknown_failure",
-            extra={
-                "provider": self.provider,
-                "model": model,
-                "error": str(exc),   # 🔥 critical
-            },
+                "ai_unknown_failure",
+                extra={
+                    "provider": self.provider,
+                    "model": model,
+                    "error": str(exc),  # 🔥 critical
+                },
             )
-            raise AIProviderError(
-                "AI inference failed"
-            ) from exc
+            raise AIProviderError("AI inference failed") from exc

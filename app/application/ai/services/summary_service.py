@@ -1,4 +1,6 @@
 from app.application.ai.core.bullet_parser import BulletParser
+from app.application.ai.domain.ai_capability import AICapability
+from app.application.ai.domain.ai_inference_port import AIInferencePort
 from app.application.ai.prompts.summary_prompt import SummaryPrompt
 from app.application.ai.validator.prompt_evaluator import PromptEvaluator
 from app.core.config import AISettings
@@ -9,22 +11,24 @@ class SummaryService:
 
     def __init__(
         self,
-        model: AIModelPort,
+        *,
         prompt: SummaryPrompt,
+        inference: AIInferencePort,
         settings: AISettings
     ):
-        self.model = model
+        self.inference = inference
         self.prompt = prompt
         self.settings = settings
 
     async def summarize(self, text: str) -> str:
         prompt_text = self.prompt.build(text)
-        valid_output = await self.model.generate(
-            prompt_text,
+        valid_output = await self.inference.generate(
+            capability=AICapability.SUMMARIZATION,
+            prompt=prompt_text,
             temperature=self.settings.temperature,
             max_tokens=self.settings.max_tokens,
         )
-
+    
         # # observability
         # self.evaluator.evaluate(
         #     prompt_version=self.prompt.VERSION,

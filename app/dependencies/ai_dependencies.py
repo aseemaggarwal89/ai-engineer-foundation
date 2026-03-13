@@ -12,8 +12,8 @@ def get_summary_service(
     container: ServiceContainer = Depends(get_container),
 ) -> SummaryService:
     return SummaryService(
-        model=container.get_ai_model(),
         prompt=container.summary_prompt,
+        inference=container.get_ai_inference(),
         settings=container.ai_settings
     )
 

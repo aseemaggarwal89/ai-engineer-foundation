@@ -1,7 +1,9 @@
 from openai import AsyncOpenAI
 import httpx
 from app.application.ai.core.ai_reliability_pipeline import AIReliabilityPipeline
-from app.application.ai.infrastructure.fallback_model_router import InferenceRouter
+from app.application.ai.domain.ai_inference_port import AIInferencePort
+from app.application.ai.domain.ai_provider import AIProvider
+from app.application.ai.infrastructure.ai_inference_port import InferenceRouter
 from app.application.ai.validator.prompt_evaluator import PromptEvaluator
 from app.application.ai.validator.request.ai_guardrails import AIGuardrails
 from app.application.ai.core.bullet_parser import BulletParser
@@ -13,13 +15,10 @@ from app.application.ai.validator.response.hallucination_guard import Hallucinat
 from app.application.ai.validator.request.ai_safety import AISafetyFilter
 from app.application.ai.validator.response.response_scorer import AIResponseScorer
 from app.application.ai.validator.response.response_validator import AIResponseValidator
-from app.core.config import AIProvider, AISettings, Settings
+from app.core.config import Settings
 from app.core.model_registry import ModelRegistry
 from app.domain.exceptions.exceptions import ServiceError
-from app.application.ai.core.circuit_breakers import (
-    ollama_breaker,
-    openai_breaker,
-)
+from app.application.ai.core.circuit_breakers import CircuitBreaker
 
 
 class ServiceContainer:
@@ -48,12 +47,21 @@ class ServiceContainer:
             timeout=self.ai_settings.timeout_seconds,
         )
 
-        self.openai_adapter = OpenAIAdapter(self.openai_client, 
-                                            self.ai_settings, 
-                                            openai_breaker)
-        self.ollama_adapter = OllamaAdapter(self.ollama_client, 
-                                            self.ai_settings, 
-                                            ollama_breaker)
+        self.ollama_breaker = CircuitBreaker(
+            failure_threshold=3,
+            recovery_timeout=20,
+        )
+        self.openai_breaker = CircuitBreaker(
+            failure_threshold=5,
+            recovery_timeout=30,
+        )
+
+        self.openai_adapter = OpenAIAdapter(
+            self.openai_client, self.ai_settings, self.openai_breaker
+        )
+        self.ollama_adapter = OllamaAdapter(
+            self.ollama_client, self.ai_settings, self.ollama_breaker
+        )
         # -------------------------
         # AI Response Componenets
         # -------------------------
@@ -66,8 +74,9 @@ class ServiceContainer:
         # Registry + Router
         # -------------------------
 
-        self.model_registry = ModelRegistry(settings)
-
+        self.model_registry = ModelRegistry(settings.ai)
+        self.model_registry.register_adapter(AIProvider.OPENAI, self.openai_adapter)
+        self.model_registry.register_adapter(AIProvider.OLLAMA, self.ollama_adapter)
         # -------------------------
         # AI Validation
         # -------------------------
@@ -79,29 +88,15 @@ class ServiceContainer:
         )
 
         self.router = InferenceRouter(
-            primary=self.ollama_adapter,
-            fallback=self.openai_adapter,
+            registry=self.model_registry,
             reliability_pipeline=self.reliability_pipeline,
             threshold=0.65,
         )
 
-    def get_ai_model(self) -> AIModelPort:
+    def get_ai_inference(self) -> AIInferencePort:
         # Example strategy:
         # cheap local first → smart cloud fallback
         return self.router
-
-    # def get_primary_model(self) -> AIModelPort:
-    #     if self.ai_settings.provider == AIProvider.OPENAI:
-    #         return OpenAIAdapter(
-    #             self.openai_client,
-    #             self.ai_settings,
-    #         )
-    #     if self.ai_settings.provider == AIProvider.OLLAMA:
-    #         return OllamaAdapter(
-    #             self.ollama_client,
-    #             self.ai_settings,
-    #         )
-    #     raise ServiceError("Unsupported AI provider")
 
     # 🔥 IMPORTANT
     async def startup(self):

@@ -1,41 +1,45 @@
 import logging
 from app.application.ai.core.ai_reliability_pipeline import AIReliabilityPipeline
+from app.application.ai.domain.ai_capability import AICapability
+from app.application.ai.domain.ai_inference_port import AIInferencePort
 from app.application.ai.domain.ai_model_port import AIModelPort
+from app.core.model_registry import ModelRegistry
 from app.domain.exceptions.exceptions import AIProviderError, ResponseValidationError, ServiceError
 
 logger = logging.getLogger(__name__)
 
 
-class InferenceRouter(AIModelPort):
+class InferenceRouter(AIInferencePort):
 
     def __init__(
         self,
-        primary: AIModelPort,
-        fallback: AIModelPort,
+        registry: ModelRegistry,
         reliability_pipeline: AIReliabilityPipeline,
         threshold: float = 0.6,
     ):
-        self.primary = primary
-        self.fallback = fallback
+        self.registry = registry
         self.pipeline = reliability_pipeline
         self.threshold = threshold
 
     async def generate(
         self,
-        prompt: str,
         *,
+        capability: AICapability,
+        prompt: str,
         temperature: float,
         max_tokens: int,
     ) -> str:
-
+        primary = self.registry.get_primary(capability)
+        fallback = self.registry.get_fallback(capability)
+    
         score = None  # 🔥 prevents referenced-before-assignment bug
 
         # ---------------- PRIMARY ----------------
         try:
             logger.info("ai_router_primary_attempt")
 
-            response = await self.primary.generate(
-                prompt,
+            response = await primary.generate(
+                prompt=prompt,
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
@@ -63,7 +67,7 @@ class InferenceRouter(AIModelPort):
         logger.info("ai_router_fallback_attempt")
 
         try:
-            response = await self.fallback.generate(
+            response = await fallback.generate(
                 prompt,
                 temperature=temperature,
                 max_tokens=max_tokens,

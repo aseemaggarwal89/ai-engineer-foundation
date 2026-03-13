@@ -5,6 +5,7 @@ from typing import Optional
 import httpx
 import pybreaker
 
+from app.application.ai.core.circuit_breakers import CircuitBreaker
 from app.core import timeout, tracer
 from app.core.config import AISettings
 from app.core.retry import infra_retry
@@ -17,40 +18,46 @@ logger = logging.getLogger(__name__)
 
 class OllamaAdapter(AIModelPort):
 
-    def __init__(self, client: httpx.AsyncClient, 
-                 ai_settings: AISettings,
-                 breaker: pybreaker.CircuitBreaker):
+    def __init__(
+        self,
+        client: httpx.AsyncClient,
+        ai_settings: AISettings,
+        breaker: CircuitBreaker,
+    ):
         self.client = client
         self.settings = ai_settings
         self.provider = "ollama"
         self.breaker = breaker
 
     @infra_retry()
-    @tracer.traced("ai.generate")
+    # @tracer.traced("ai.generate")
     async def generate(
         self,
-        prompt: str,
         *,
+        prompt: str,
         temperature: float,
         max_tokens: int,
     ) -> str:
-        try:
-            return await self.breaker.call_async(
-                self._generate,
-                prompt,
-                temperature,
-                max_tokens,
-            )
-
-        except pybreaker.CircuitBreakerError:
+        # return await self._generate(prompt, temperature, max_tokens)
+        
+        if not self.breaker.allow_request():
             logger.warning(
-                "ai_circuit_open",
+                "ai_circuit_prevented_request",
                 extra={"provider": self.provider},
             )
             raise AIProviderError("Ollama circuit open")
-    
+        try:
+            result = await self._generate(prompt=prompt, temperature=temperature, max_tokens=max_tokens)
+            self.breaker.record_success()
+            return result
+
+        except Exception:
+            self.breaker.record_failure()
+            raise
+
     async def _generate(
         self,
+        *,
         prompt: str,
         temperature: float,
         max_tokens: int,
@@ -128,9 +135,7 @@ class OllamaAdapter(AIModelPort):
                 extra={"provider": self.provider, "model": model},
             )
 
-            raise AIProviderError(
-                "AI provider timeout"
-            ) from exc
+            raise AIProviderError("AI provider timeout") from exc
 
         except httpx.HTTPStatusError as exc:
             logger.exception(
@@ -142,9 +147,7 @@ class OllamaAdapter(AIModelPort):
                 },
             )
 
-            raise AIProviderError(
-                "AI provider failure"
-            ) from exc
+            raise AIProviderError("AI provider failure") from exc
 
         except httpx.HTTPError as exc:
             logger.exception(
@@ -152,9 +155,7 @@ class OllamaAdapter(AIModelPort):
                 extra={"provider": self.provider, "model": model},
             )
 
-            raise AIProviderError(
-                "AI transport failure"
-            ) from exc
+            raise AIProviderError("AI transport failure") from exc
 
         except Exception as exc:
             logger.exception(
@@ -166,6 +167,4 @@ class OllamaAdapter(AIModelPort):
                 },
             )
 
-            raise AIProviderError(
-                "AI inference failed"
-            ) from exc
+            raise AIProviderError("AI inference failed") from exc
