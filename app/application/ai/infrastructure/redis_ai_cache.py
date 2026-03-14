@@ -10,20 +10,19 @@ class RedisAIResponseCache(AIResponseCachePort):
     def __init__(self, redis: Redis):
         self.redis = redis
 
-    def build_key(self, prompt: str, model: str) -> str:
+    def build_key(self, *,
+                  capability: str,
+                  prompt: str,
+                  model: str,
+                  temperature: float,
+                  max_tokens: int) -> str:
+        raw = f"{capability}|{model}|{temperature}|{max_tokens}|{prompt}"
+        hash_key = hashlib.sha256(raw.encode()).hexdigest()
 
-        raw = f"{model}:{prompt}"
-        return hasxhlib.sha256(raw.encode()).hexdigest()
+        return f"ai_cache:{hash_key}"
 
     async def get(self, key: str):
-
-        data = await self.redis.get(key)
-
-        if not data:
-            return None
-
-        return json.loads(data)
+        return await self.redis.get(key)
 
     async def set(self, key: str, value: str, ttl: int = 3600):
-
-        await self.redis.set(key, json.dumps(value), ex=ttl)
+        await self.redis.set(key, value, ex=ttl)

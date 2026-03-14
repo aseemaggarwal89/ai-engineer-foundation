@@ -11,3 +11,12 @@ class AIResponseCachePort(ABC):
     @abstractmethod
     async def set(self, key: str, value: str, ttl: int) -> None:
         ...
+    
+    @abstractmethod
+    def build_key(self, *,
+                  capability: str,
+                  prompt: str,
+                  model: str,
+                  temperature: float,
+                  max_tokens: int) -> str:
+        pass

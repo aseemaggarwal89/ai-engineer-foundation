@@ -14,7 +14,9 @@ def get_summary_service(
     return SummaryService(
         prompt=container.summary_prompt,
         inference=container.get_ai_inference(),
-        settings=container.ai_settings
+        cache=container.ai_cache,
+        settings=container.ai_settings,
+        reliability_pipeline=container.reliability_pipeline,
     )
 
 

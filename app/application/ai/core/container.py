@@ -1,9 +1,11 @@
 from openai import AsyncOpenAI
 import httpx
+from redis.asyncio import Redis
 from app.application.ai.core.ai_reliability_pipeline import AIReliabilityPipeline
 from app.application.ai.domain.ai_inference_port import AIInferencePort
 from app.application.ai.domain.ai_provider import AIProvider
 from app.application.ai.infrastructure.ai_inference_port import InferenceRouter
+from app.application.ai.infrastructure.redis_ai_cache import RedisAIResponseCache
 from app.application.ai.validator.prompt_evaluator import PromptEvaluator
 from app.application.ai.validator.request.ai_guardrails import AIGuardrails
 from app.application.ai.core.bullet_parser import BulletParser
@@ -88,10 +90,16 @@ class ServiceContainer:
         )
 
         self.router = InferenceRouter(
-            registry=self.model_registry,
-            reliability_pipeline=self.reliability_pipeline,
-            threshold=0.65,
+            registry=self.model_registry
         )
+
+        self.redis = Redis(
+            host="redis",  # docker service name
+            port=6379,
+            decode_responses=True,
+        )
+
+        self.ai_cache = RedisAIResponseCache(self.redis)
 
     def get_ai_inference(self) -> AIInferencePort:
         # Example strategy:
@@ -105,3 +113,4 @@ class ServiceContainer:
     async def shutdown(self):
         await self.ollama_client.aclose()
         await self.model_registry.close()
+        await self.redis.close()

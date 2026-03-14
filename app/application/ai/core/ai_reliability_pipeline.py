@@ -18,18 +18,26 @@ class AIReliabilityPipeline:
         self.validator = validator
         self.scorer = scorer
         self.parser = parser
+    
+    def run(self, raw_response: str) -> tuple[list[str], float]:
+        """
+        Reliability pipeline:
+        raw text → validate → parse → validate bullets → hallucination guard → score
+        """
 
-    def run(self, response):
-        # raw text
-        self.validator.validate(response)
-        # parsed + structured
-        bullets = self.parser.parse(response)
-        # bullet validation
-        response = self.validator.validate_bullets(bullets)
+        # -------- raw validation --------
+        self.validator.validate(raw_response)
 
-        # hallucination detection
-        self.hallucination_guard.check_bullets(response)
+        # -------- parsing --------
+        bullets: list[str] = self.parser.parse(raw_response)
 
-        # score
-        score = self.scorer.score_bullets(response)
-        return response, score
+        # -------- structured validation --------
+        valid_bullets: list[str] = self.validator.validate_bullets(bullets)
+
+        # -------- hallucination detection --------
+        self.hallucination_guard.check_bullets(valid_bullets)
+
+        # -------- scoring --------
+        score: float = self.scorer.score_bullets(valid_bullets)
+
+        return valid_bullets, score
