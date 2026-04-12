@@ -1,18 +1,38 @@
 {
     "version": "0.2.0",
     "configurations": [
-        
+
         {
-            "name": "Debug FastAPI",
+            "name": "✅ Attach FastAPI (Docker)",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "justMyCode": false,
+            "pathMappings": [
+                {
+                "localRoot": "${workspaceFolder}",
+                "remoteRoot": "/app"
+                }
+            ]
+        },
+
+        {
+            "name": "🚫 Local FastAPI (Avoid Using)",
             "type": "debugpy",
             "request": "launch",
             "module": "uvicorn",
             "args": [
                 "app.main:app",
-                "--reload"
+                "--reload",
+                "--port",
+                "8010"
             ],
             "envFile": "${workspaceFolder}/.env",
-            "jinja": true
+            "jinja": true,
+            "console": "integratedTerminal"
         }
     ]
 }

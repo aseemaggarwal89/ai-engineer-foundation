@@ -1,4 +1,4 @@
-from app.application.ai.core.ai_reliability_pipeline import AIReliabilityPipeline
+from app.application.ai.core.summarization_pipeline import SummarizationPipeline
 from app.application.ai.validator.request.ai_guardrails import AIGuardrails
 from app.application.ai.services.summary_service import SummaryService
 from app.application.ai.validator.request.ai_safety import AISafetyFilter

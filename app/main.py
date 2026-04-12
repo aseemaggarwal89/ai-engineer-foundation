@@ -50,9 +50,9 @@ async def lifespan(app: FastAPI):
     await container.startup()
     app.state.container = container
 
-    # logging.getLogger(__name__).info("Initializing database")
-    # async with engine.begin() as conn:
-    #     await conn.run_sync(Base.metadata.create_all)
+    logging.getLogger(__name__).info("Initializing database")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
     # ✅ Create once
     yield  # Application runs here

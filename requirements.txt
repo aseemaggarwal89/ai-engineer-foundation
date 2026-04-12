@@ -34,3 +34,5 @@ opentelemetry-instrumentation-sqlalchemy==0.60b1
 email-validator==2.3.0
 
 redis>=5.0.0
+
+debugpy

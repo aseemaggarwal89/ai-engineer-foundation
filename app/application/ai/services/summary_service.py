@@ -3,7 +3,8 @@ import logging
 from fastapi.exceptions import ResponseValidationError
 import json
 
-from app.application.ai.core.ai_reliability_pipeline import AIReliabilityPipeline
+from app.application.ai.core.pipeline_registry import PipelineRegistry
+from app.application.ai.core.summarization_pipeline import SummarizationPipeline
 from app.application.ai.core.bullet_parser import BulletParser
 from app.application.ai.domain.ai_cache_port import AIResponseCachePort
 from app.application.ai.domain.ai_capability import AICapability
@@ -25,14 +26,14 @@ class SummaryService:
         inference: AIInferencePort,
         cache: AIResponseCachePort,
         settings: AISettings,
-        reliability_pipeline: AIReliabilityPipeline,
+        pipeline_registry: PipelineRegistry,
         threshold: float = 0.6,
     ):
         self.inference = inference
         self.prompt = prompt
         self.cache = cache
         self.settings = settings
-        self.pipeline = reliability_pipeline
+        self.pipeline_registry = pipeline_registry
         self.threshold = threshold
 
     async def summarize(self, text: str) -> list[str]:
@@ -52,7 +53,6 @@ class SummaryService:
             return json.loads(cached)
         
         logger.info("ai_cache_miss", extra={"capability": "summarization"})
-        prompt_text = self.prompt.build(text)
         
         raw_output = await self.inference.generate(
             capability=AICapability.SUMMARIZATION,
@@ -62,7 +62,9 @@ class SummaryService:
         )
         logger.info("validation_success", extra={"capability": "summarization", "raw_output": raw_output})
 
-        bullets, score = self.pipeline.run(raw_output)
+        pipeline = self.pipeline_registry.get(AICapability.SUMMARIZATION)
+        bullets, score = pipeline.run(raw_output)
+        
         if score < 0.6:
             raise ResponseValidationError("Low quality AI output")
 

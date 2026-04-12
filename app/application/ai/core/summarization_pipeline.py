@@ -6,7 +6,7 @@ from app.application.ai.validator.response.response_validator import AIResponseV
 from app.domain.exceptions.exceptions import ResponseValidationError
 
 
-class AIReliabilityPipeline:
+class SummarizationPipeline:
     def __init__(
         self,
         hallucination_guard: HallucinationGuard,

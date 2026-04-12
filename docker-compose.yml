@@ -14,11 +14,14 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
+      - "5678:5678"   # ⭐ REQUIRED for debug
 
     env_file:
       - .env.docker 
-    # volumes:
-    #   - ./app:/app/app     # ⭐ hot reload source
+    environment:
+    - DEBUG=false     # ⭐ toggle debug mode
+    volumes:
+      - ./app:/app/app     # ⭐ hot reload source
     depends_on:
       postgres:
         condition: service_healthy

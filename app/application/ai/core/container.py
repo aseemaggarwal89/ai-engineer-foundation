@@ -1,7 +1,9 @@
 from openai import AsyncOpenAI
 import httpx
 from redis.asyncio import Redis
-from app.application.ai.core.ai_reliability_pipeline import AIReliabilityPipeline
+from app.application.ai.core.chat_pipeline import ChatPipeline
+from app.application.ai.core.summarization_pipeline import SummarizationPipeline
+from app.application.ai.domain.ai_capability import AICapability
 from app.application.ai.domain.ai_inference_port import AIInferencePort
 from app.application.ai.domain.ai_provider import AIProvider
 from app.application.ai.infrastructure.ai_inference_port import InferenceRouter
@@ -21,6 +23,7 @@ from app.core.config import Settings
 from app.core.model_registry import ModelRegistry
 from app.domain.exceptions.exceptions import ServiceError
 from app.application.ai.core.circuit_breakers import CircuitBreaker
+from app.application.ai.core.pipeline_registry import PipelineRegistry
 
 
 class ServiceContainer:
@@ -79,10 +82,25 @@ class ServiceContainer:
         self.model_registry = ModelRegistry(settings.ai)
         self.model_registry.register_adapter(AIProvider.OPENAI, self.openai_adapter)
         self.model_registry.register_adapter(AIProvider.OLLAMA, self.ollama_adapter)
+
+        self.pipeline_registry = PipelineRegistry()
+
+        self.pipeline_registry.register(AICapability.SUMMARIZATION,
+                                        SummarizationPipeline(
+                                            hallucination_guard=HallucinationGuard(),
+                                            validator=AIResponseValidator(),
+                                            scorer=AIResponseScorer(),
+                                            parser=BulletParser(),
+                                        ))
+        self.pipeline_registry.register(AICapability.CHAT,
+                                        ChatPipeline(
+                                            validator=AIResponseValidator(),
+                                            scorer=AIResponseScorer(),
+                                        ))
         # -------------------------
         # AI Validation
         # -------------------------
-        self.reliability_pipeline = AIReliabilityPipeline(
+        self.reliability_pipeline = SummarizationPipeline(
             hallucination_guard=HallucinationGuard(),
             validator=AIResponseValidator(),
             scorer=AIResponseScorer(),

@@ -11,14 +11,19 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
+# Install dependencies
 COPY requirements.txt .
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
-
-# Copy ONLY runtime code folder
+# Copy app
 COPY app ./app
 
-EXPOSE 8000
+# Set working dir
+WORKDIR /app
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# ⭐ Debug-aware startup
+CMD ["sh", "-c", "if [ \"$DEBUG\" = \"true\" ]; then \
+  python -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m uvicorn app.main:app --host 0.0.0.0 --port 8000; \
+else \
+  uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload; \
+fi"]

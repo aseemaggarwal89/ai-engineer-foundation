@@ -16,7 +16,7 @@ def get_summary_service(
         inference=container.get_ai_inference(),
         cache=container.ai_cache,
         settings=container.ai_settings,
-        reliability_pipeline=container.reliability_pipeline,
+        pipeline_registry=container.pipeline_registry,
     )
 
 

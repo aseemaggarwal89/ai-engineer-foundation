@@ -99,9 +99,9 @@ class DeepHealthCheckUseCase:
         try:
             await self.repo.fetch_status()
             result["database"] = "ok"
-        except Exception:
+        except Exception as exc:
             result["database"] = "fail"
-
+            logger.error("Database health check failed", extra={"error": str(exc)})
         # future: model registry, vector DB, etc.
         result["service"] = "ok"
 

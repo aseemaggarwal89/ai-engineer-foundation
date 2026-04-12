@@ -1,5 +1,5 @@
 import logging
-from app.application.ai.core.ai_reliability_pipeline import AIReliabilityPipeline
+from app.application.ai.core.summarization_pipeline import SummarizationPipeline
 from app.application.ai.domain.ai_capability import AICapability
 from app.application.ai.domain.ai_inference_port import AIInferencePort
 from app.application.ai.domain.ai_model_port import AIModelPort
