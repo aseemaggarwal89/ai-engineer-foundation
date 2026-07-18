@@ -22,7 +22,7 @@ from app.core.logging import setup_logging
 from app.core.config import get_settings
 from app.db.db import engine, Base
 from app.core.exception_registry import addGlobalExceptionHandlers
-from app.api.routers import addRouters
+from app.routers.routers import addRouters
 from app.core.middleware.request_id import RequestIDMiddleware
 
 from app.core.tracing import setup_tracing

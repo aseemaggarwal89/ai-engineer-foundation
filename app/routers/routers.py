@@ -1,23 +1,23 @@
 from fastapi import FastAPI
 
-from app.api.routes.health import (
+from app.routers.routes.health import (
     public_router as health_public_router,
     protected_router as health_protected_router,
 )
-from app.api.routes.auth import (
+from app.routers.routes.auth import (
     public_router as auth_public_router,
     protected_router as auth_protected_router,
 )
 
-from app.api.routes.admin import (
+from app.routers.routes.admin import (
     admin_router as admin_router
 )
 
-from app.api.routes.ai import (
+from app.routers.routes.ai import (
     public_router as ai_router
 )
 
-from app.api.routes.metrics import router as metrics_router
+from app.routers.routes.metrics import router as metrics_router
 
 
 def addRouters(app: FastAPI) -> None:
