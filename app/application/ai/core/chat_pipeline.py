@@ -12,6 +12,6 @@ class ChatPipeline(AIResponsePipeline):
 
         self.validator.validate(raw_response)
 
-        score = self.scorer.score_text(raw_response)
+        score = self.scorer.score(raw_response)
 
         return raw_response, score

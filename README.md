@@ -157,6 +157,9 @@ AI settings use nested environment variables because `env_nested_delimiter="__"`
 AI__PROVIDER=ollama
 AI__OPENAI_API_KEY=sk-replace-me
 AI__OLLAMA_BASE_URL=http://ollama:11434
+AI__REDIS_HOST=redis
+AI__REDIS_PORT=6379
+AI__OTLP_ENDPOINT=http://otel-collector:4317
 AI__TEMPERATURE=0.6
 AI__MAX_TOKENS=512
 AI__TIMEOUT_SECONDS=40
@@ -173,9 +176,11 @@ Important behavior:
 
 - `AIProvider.OLLAMA` maps to model `tinyllama`.
 - `AIProvider.OPENAI` maps to model `gpt-4.1-mini`.
-- `AISettings.set_model_name()` overwrites `model_name` with the provider default.
-- `ModelRegistry.load()` expects `AI__MODEL_REGISTRY__SUMMARIZATION__PRIMARY` to exist. Without model registry config, AI routing can fail when it looks up a capability.
-- `RedisAIResponseCache` currently connects to host `redis`, which works inside Docker Compose but may need adjustment for direct host-based local runs.
+- `AISettings.validate_ai_settings()` overwrites `model_name` with the provider default.
+- OpenAI API keys are required only when OpenAI is selected directly or appears in a configured model route.
+- `ModelRegistry.load()` expects `AI__MODEL_REGISTRY__SUMMARIZATION__PRIMARY` to exist. Without model registry config, AI routing returns a controlled service error when it looks up a capability.
+- Redis host and port are configurable through `AI__REDIS_HOST` and `AI__REDIS_PORT`.
+- Tracing is enabled only when `AI__OTLP_ENDPOINT` is configured.
 
 ## Application Startup
 
@@ -675,10 +680,10 @@ curl http://127.0.0.1:8000/metrics
 
 ### OpenTelemetry Tracing
 
-`app/core/tracing.py` instruments FastAPI and SQLAlchemy and exports OTLP spans to:
+When `AI__OTLP_ENDPOINT` is configured, `app/core/tracing.py` instruments FastAPI and SQLAlchemy and exports OTLP spans to that endpoint. In Docker Compose this is:
 
 ```text
-http://ai_engineer_otel:4317
+http://otel-collector:4317
 ```
 
 In Docker Compose, the OTEL collector forwards traces to Jaeger. Open:
@@ -918,7 +923,7 @@ app.dependency_overrides[get_summarize_use_case] = override_summarize_use_case
 - Never commit real `.env` files or API keys.
 - Use a secret manager for `JWT_SECRET_KEY`, database credentials, and OpenAI keys.
 - Validate startup config before accepting traffic.
-- Make Redis host, OTLP endpoint, and provider settings environment-driven.
+- Keep Redis host, OTLP endpoint, and provider settings environment-driven.
 
 ### Database
 
@@ -1021,10 +1026,5 @@ For studying the project, read in this order:
 
 ## Known Maintenance Notes
 
-- `app/main.py` imports `AsyncOpenAI` twice; this is harmless but can be cleaned up.
 - Several comments contain visual markers from learning notes; consider standardizing comments as the code matures.
-- Redis host is hardcoded to `redis`.
-- OTLP endpoint is hardcoded to `http://ai_engineer_otel:4317`.
-- `SummaryService` imports FastAPI's `ResponseValidationError`, while the domain also defines `ResponseValidationError`; this can make error handling harder to reason about.
-- The current health tests appear stale against the latest routing/dependency structure.
 - `Base.metadata.create_all()` is convenient locally, but migrations should own schema changes in production.

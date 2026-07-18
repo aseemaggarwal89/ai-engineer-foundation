@@ -7,6 +7,12 @@ from app.domain.exceptions.exceptions import ResponseValidationError
 
 
 class SummarizationPipeline:
+    """
+    Converts raw model text into trusted summary bullets.
+
+    Keep this pipeline deterministic and fast. Expensive judging/evaluation can
+    be added later as another pipeline step or background observation path.
+    """
     def __init__(
         self,
         hallucination_guard: HallucinationGuard,
@@ -22,22 +28,23 @@ class SummarizationPipeline:
     def run(self, raw_response: str) -> tuple[list[str], float]:
         """
         Reliability pipeline:
-        raw text → validate → parse → validate bullets → hallucination guard → score
+        raw text -> validate -> parse -> validate bullets -> guard -> score
         """
 
-        # -------- raw validation --------
+        # Reject obviously broken or unsafe raw text before parsing.
         self.validator.validate(raw_response)
 
-        # -------- parsing --------
+        # Normalize provider-specific bullet formatting into application data.
         bullets: list[str] = self.parser.parse(raw_response)
 
-        # -------- structured validation --------
+        # Apply zero-trust validation to parsed bullets, not only raw text.
         valid_bullets: list[str] = self.validator.validate_bullets(bullets)
 
-        # -------- hallucination detection --------
+        # Current guard is simple, but this is the extension point for stronger
+        # factuality checks or source-grounding checks.
         self.hallucination_guard.check_bullets(valid_bullets)
 
-        # -------- scoring --------
+        # Score is used by SummaryService to decide whether to return or reject.
         score: float = self.scorer.score_bullets(valid_bullets)
 
         return valid_bullets, score

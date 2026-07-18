@@ -1,15 +1,18 @@
-from app.application.ai.core.summarization_pipeline import SummarizationPipeline
 from app.application.ai.validator.request.ai_guardrails import AIGuardrails
 from app.application.ai.services.summary_service import SummaryService
 from app.application.ai.validator.request.ai_safety import AISafetyFilter
-from app.application.ai.validator.response.hallucination_guard import HallucinationGuard
-from app.application.ai.validator.response.response_scorer import AIResponseScorer
-from app.application.ai.validator.response.response_validator import AIResponseValidator
 from app.core.config import AISettings
 from app.core.timeout import timeout_from_self
 
 
 class SummarizeTextUseCase:
+    """
+    Application boundary for summarization.
+
+    Workflow:
+    validate user input -> sanitize prompt text -> delegate AI orchestration
+    to SummaryService. This keeps HTTP and provider details out of the use case.
+    """
 
     def __init__(
         self,
@@ -25,10 +28,8 @@ class SummarizeTextUseCase:
 
     @timeout_from_self
     async def execute(self, text: str) -> list[str]:
-        # 🔥 Layer 7 protections
+        # Request-side protections run before prompt construction or provider calls.
         self.safety.check(text)
         text = self.guardrails.validate_prompt(text)
 
-        bullets = await self.summary_service.summarize(text)
-
-        return bullets
+        return await self.summary_service.summarize(text)

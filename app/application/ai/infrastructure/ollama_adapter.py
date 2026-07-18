@@ -3,13 +3,10 @@ import logging
 from typing import Optional
 
 import httpx
-import pybreaker
 
 from app.application.ai.core.circuit_breakers import CircuitBreaker
-from app.core import timeout, tracer
 from app.core.config import AISettings
 from app.core.retry import infra_retry
-from app.dependencies.deps import settings
 from app.application.ai.domain.ai_model_port import AIModelPort
 from app.domain.exceptions.exceptions import AIProviderError
 
@@ -17,6 +14,12 @@ logger = logging.getLogger(__name__)
 
 
 class OllamaAdapter(AIModelPort):
+    """
+    Ollama implementation of AIModelPort.
+
+    The rest of the application sees the same generate() contract as OpenAI,
+    while this adapter handles Ollama's local HTTP API details.
+    """
 
     def __init__(
         self,
@@ -38,8 +41,7 @@ class OllamaAdapter(AIModelPort):
         temperature: float,
         max_tokens: int,
     ) -> str:
-        # return await self._generate(prompt, temperature, max_tokens)
-        
+        # Avoid repeated local-model calls while Ollama is unhealthy.
         if not self.breaker.allow_request():
             logger.warning(
                 "ai_circuit_prevented_request",
@@ -106,9 +108,7 @@ class OllamaAdapter(AIModelPort):
                 },
             )
 
-            # -----------------------------
-            # Defensive Output Extraction
-            # -----------------------------
+            # Ollama returns generated text in the "response" field.
             output_text: Optional[str] = data.get("response")
 
             if not output_text:
@@ -125,10 +125,7 @@ class OllamaAdapter(AIModelPort):
 
             return output_text.strip()
 
-        # -----------------------------
-        # Normalize Failures
-        # -----------------------------
-
+        # Normalize transport/provider failures so router fallback remains simple.
         except httpx.TimeoutException as exc:
             logger.exception(
                 "ai_timeout",

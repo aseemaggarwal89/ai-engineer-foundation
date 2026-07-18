@@ -20,6 +20,7 @@ services:
       - .env.docker 
     environment:
     - DEBUG=false     # ⭐ toggle debug mode
+    - AI__OTLP_ENDPOINT=http://otel-collector:4317
     volumes:
       - ./app:/app/app     # ⭐ hot reload source
     depends_on:
@@ -28,6 +29,8 @@ services:
       ollama:
         condition: service_healthy
       redis:                      # ⭐ ADD
+        condition: service_started
+      otel-collector:
         condition: service_started
     networks:
       - ai_network
@@ -78,5 +81,28 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - ai_network
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: ai_engineer_jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - ai_network
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    container_name: ai_engineer_otel
+    command:
+      - "--config=/etc/otelcol/config.yaml"
+    volumes:
+      - ./otel-config.yaml:/etc/otelcol/config.yaml
+    depends_on:
+      - jaeger
     networks:
       - ai_network

@@ -1,12 +1,9 @@
 import logging
-from app.application.ai.core.summarization_pipeline import SummarizationPipeline
 from app.application.ai.domain.ai_capability import AICapability
 from app.application.ai.domain.ai_inference_port import AIInferencePort
-from app.application.ai.domain.ai_model_port import AIModelPort
 from app.core.model_registry import ModelRegistry
 from app.domain.exceptions.exceptions import (
     AIProviderError,
-    ResponseValidationError,
     ServiceError,
 )
 
@@ -14,6 +11,14 @@ logger = logging.getLogger(__name__)
 
 
 class InferenceRouter(AIInferencePort):
+    """
+    Capability-aware inference gateway.
+
+    Callers request an AI capability, not a vendor. The router asks
+    ModelRegistry for the primary provider and falls back only when the primary
+    raises AIProviderError, which means provider adapters must normalize
+    transport/vendor failures into that domain exception.
+    """
 
     def __init__(self, registry: ModelRegistry):
         self.registry = registry
@@ -29,7 +34,7 @@ class InferenceRouter(AIInferencePort):
         primary = self.registry.get_primary(capability)
         fallback = self.registry.get_fallback(capability)
 
-        # ---------------- PRIMARY ----------------
+        # Try the cheapest/preferred provider first.
         try:
             logger.info("ai_router_primary_attempt")
 
@@ -45,7 +50,13 @@ class InferenceRouter(AIInferencePort):
                 exc_info=exc,
             )
 
-        # ---------------- FALLBACK ----------------
+        # Missing fallback is a configuration decision, not an AttributeError.
+        if fallback is None:
+            logger.exception("ai_router_no_fallback_configured")
+            raise ServiceError("Primary AI provider failed and no fallback is configured")
+
+        # Fallback keeps the application available when the primary provider is
+        # rate limited, down, or timing out.
         logger.info("ai_router_fallback_attempt")
 
         try:

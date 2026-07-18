@@ -25,7 +25,7 @@ from opentelemetry.sdk.resources import Resource
 from app.db.db import engine
 
 
-def setup_tracing(app, service_name: str) -> None:
+def setup_tracing(app, service_name: str, otlp_endpoint: str) -> None:
     """
     Initialize OpenTelemetry tracing.
 
@@ -53,7 +53,7 @@ def setup_tracing(app, service_name: str) -> None:
     # Sends spans to collector instead of terminal
     # ---------------------------------------------------------
     otlp_exporter = OTLPSpanExporter(
-        endpoint="localhost:4317",
+        endpoint=otlp_endpoint,
         insecure=True
     )
 

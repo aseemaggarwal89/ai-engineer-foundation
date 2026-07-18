@@ -3,10 +3,6 @@
 import sys
 from pathlib import Path
 
-import httpx
-from openai import AsyncOpenAI
-from openai import AsyncOpenAI
-
 from app.application.ai.core.container import ServiceContainer
 from app.core.middleware.body_size import BodySizeLimitMiddleware
 from app.core.middleware.metrics_middleware import MetricsMiddleware
@@ -27,7 +23,6 @@ from app.core.config import get_settings
 from app.db.db import engine, Base
 from app.core.exception_registry import addGlobalExceptionHandlers
 from app.api.routers import addRouters
-from app.core.model_registry import ModelRegistry
 from app.core.middleware.request_id import RequestIDMiddleware
 
 from app.core.tracing import setup_tracing
@@ -87,7 +82,8 @@ def create_app() -> FastAPI:
     )
 
     # 2️⃣ Tracing second (captures startup + routes)
-    setup_tracing(app, settings.app_name)
+    if settings.ai.otlp_endpoint:
+        setup_tracing(app, settings.app_name, settings.ai.otlp_endpoint)
 
     # 4️⃣ Middleware (order matters)
 

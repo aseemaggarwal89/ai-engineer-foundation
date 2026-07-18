@@ -3,11 +3,10 @@ import logging
 from typing import Optional
 
 from openai import AsyncOpenAI, APIError, RateLimitError, APITimeoutError
-import pybreaker
-from app.core import timeout, tracer
+from app.core import tracer
+from app.application.ai.core.circuit_breakers import CircuitBreaker
 from app.core.config import AISettings
 from app.core.retry import infra_retry
-from app.dependencies.deps import settings
 from app.application.ai.domain.ai_model_port import AIModelPort
 from app.domain.exceptions.exceptions import AIProviderError
 
@@ -15,12 +14,19 @@ logger = logging.getLogger(__name__)
 
 
 class OpenAIAdapter(AIModelPort):
+    """
+    OpenAI implementation of AIModelPort.
+
+    The adapter translates the common application contract into OpenAI's API
+    shape and normalizes vendor-specific failures into AIProviderError so the
+    router can apply fallback consistently.
+    """
 
     def __init__(
         self,
         client: AsyncOpenAI,
         ai_settings: AISettings,
-        breaker: pybreaker.CircuitBreaker,
+        breaker: CircuitBreaker,
     ):
         self.client = client
         self.settings = ai_settings
@@ -36,6 +42,8 @@ class OpenAIAdapter(AIModelPort):
         temperature: float,
         max_tokens: int
     ) -> str:
+        # Circuit breaker check happens before the retry wrapper spends time on
+        # a provider that is already considered unhealthy.
         if not self.breaker.allow_request():
             logger.warning(
                 "ai_circuit_prevented_request",
@@ -84,9 +92,8 @@ class OpenAIAdapter(AIModelPort):
                 },
             )
 
-            # -----------------------------
-            # Defensive Output Extraction
-            # -----------------------------
+            # Providers can return successful envelopes with empty content; keep
+            # that failure inside the adapter contract.
             output_text: Optional[str] = getattr(response, "output_text", None)
 
             if not output_text:
@@ -102,10 +109,7 @@ class OpenAIAdapter(AIModelPort):
 
             return output_text
 
-        # -----------------------------
-        # Provider Failures → Normalize
-        # -----------------------------
-
+        # Normalize provider failures so the router does not know OpenAI types.
         except RateLimitError as exc:
             logger.exception(
                 "ai_rate_limited",
@@ -136,7 +140,7 @@ class OpenAIAdapter(AIModelPort):
                 extra={
                     "provider": self.provider,
                     "model": model,
-                    "error": str(exc),  # 🔥 critical
+                    "error": str(exc),
                 },
             )
             raise AIProviderError("AI inference failed") from exc

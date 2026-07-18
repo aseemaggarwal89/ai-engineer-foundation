@@ -1,42 +1,72 @@
 from fastapi.testclient import TestClient
 
+from app.dependencies.use_cases import (
+    get_deep_health_usecase,
+    get_liveness_usecase,
+    get_readiness_usecase,
+)
 from app.main import create_app
-from app.dependencies.deps import health_service
 
 
-class FakeHealthService:
-    async def check(self) -> str:
-        return "test-ok"
+class FakeLivenessUseCase:
+    async def execute(self):
+        return {"status": "alive"}
 
 
-def get_fake_health_service():
-    return FakeHealthService()
+class FakeReadinessUseCase:
+    async def execute(self):
+        return {"status": "ready"}
 
 
-def test_health_endpoint_returns_ok():
+class FakeDeepHealthUseCase:
+    async def execute(self):
+        return {"database": "ok", "service": "ok"}
+
+
+def test_health_root_returns_service_message():
     app = create_app()
-
-    # Override dependency
-    app.dependency_overrides[health_service] = get_fake_health_service
-
     client = TestClient(app)
 
-    response = client.get("/health")
+    response = client.get("/health/")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "test-ok"}
+    assert response.json() == {"message": "FastAPI service is running"}
 
-    # Cleanup (important)
+
+def test_liveness_endpoint_returns_alive():
+    app = create_app()
+    app.dependency_overrides[get_liveness_usecase] = lambda: FakeLivenessUseCase()
+    client = TestClient(app)
+
+    response = client.get("/health/live")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "alive"}
+
     app.dependency_overrides.clear()
 
 
-def test_health_endpoint_uses_database(client):
-    response = client.get("/health")
+def test_readiness_endpoint_uses_use_case():
+    app = create_app()
+    app.dependency_overrides[get_readiness_usecase] = lambda: FakeReadinessUseCase()
+    client = TestClient(app)
+
+    response = client.get("/health/ready")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    assert response.json() == {"status": "ready"}
 
-    # Call again – data should come from DB, not reinsert
-    response2 = client.get("/health")
-    assert response2.status_code == 200
-    assert response2.json() == {"status": "ok"}
+    app.dependency_overrides.clear()
+
+
+def test_deep_health_endpoint_uses_use_case():
+    app = create_app()
+    app.dependency_overrides[get_deep_health_usecase] = lambda: FakeDeepHealthUseCase()
+    client = TestClient(app)
+
+    response = client.get("/health/deep")
+
+    assert response.status_code == 200
+    assert response.json() == {"database": "ok", "service": "ok"}
+
+    app.dependency_overrides.clear()
