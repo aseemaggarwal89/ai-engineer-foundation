@@ -23,6 +23,7 @@ The codebase is intentionally layered so you can study how an AI feature moves f
 - [Testing Notes](#testing-notes)
 - [Production Considerations](#production-considerations)
 - [Extension Guide](#extension-guide)
+- [Public Blog Series](#public-blog-series)
 
 ## Architecture
 
@@ -134,6 +135,19 @@ Useful URLs:
 - Metrics: `http://127.0.0.1:8000/metrics`
 - Jaeger UI: `http://127.0.0.1:16686`
 
+## Public Blog Series
+
+Publish-ready learning articles are available in [docs/blogs](./docs/blogs/README.md).
+
+The series explains this project step by step for developers learning AI integration with Python and FastAPI:
+
+1. Building a production-style AI backend with FastAPI
+2. Understanding the AI request lifecycle
+3. Using ports and adapters for Ollama/OpenAI routing
+4. Adding AI guardrails and response validation
+5. Caching AI responses with Redis
+6. Adding observability and production readiness
+
 ## Configuration
 
 Settings are loaded by `app/core/config.py` using Pydantic Settings. The app reads `.env` locally and `.env.docker` in Docker Compose.
@@ -227,7 +241,7 @@ sequenceDiagram
 
 | Layer | Main files | Responsibility |
 | --- | --- | --- |
-| API | `app/api/routes/*.py` | HTTP endpoint definitions, request/response schemas, dependency injection |
+| API | `app/routers/routes/*.py` | HTTP endpoint definitions, request/response schemas, dependency injection |
 | Dependencies | `app/dependencies/*.py` | Compose use cases, repositories, services, and AI container components |
 | Domain | `app/domain/**` | Entities, business use cases, repository interfaces, domain exceptions |
 | Repositories | `app/repositories/*.py` | SQLAlchemy persistence implementation |
@@ -865,7 +879,7 @@ Relevant files:
 
 - `app/security/authorization.py`
 - `app/domain/entities/user_role.py`
-- `app/api/routes/admin.py`
+- `app/routers/routes/admin.py`
 
 ### Audit Logging Fails Silently
 
@@ -987,7 +1001,7 @@ app.dependency_overrides[get_summarize_use_case] = override_summarize_use_case
 5. Create or reuse a pipeline in `app/application/ai/core`.
 6. Register the pipeline in `ServiceContainer`.
 7. Add model routing config to `ModelRegistrySettings`.
-8. Add a route under `app/api/routes`.
+8. Add a route under `app/routers/routes`.
 9. Wire dependencies in `app/dependencies/ai_dependencies.py`.
 10. Add tests with fake inference adapters.
 
@@ -1015,7 +1029,7 @@ app.dependency_overrides[get_summarize_use_case] = override_summarize_use_case
 For studying the project, read in this order:
 
 1. `app/main.py` to understand app setup and middleware.
-2. `app/api/routers.py` and `app/api/routes/*.py` to understand HTTP surface area.
+2. `app/routers/routers.py` and `app/routers/routes/*.py` to understand HTTP surface area.
 3. `app/dependencies/*.py` to understand dependency injection.
 4. `app/domain/use_cases/**` to understand business flow.
 5. `app/repositories/*.py` and `app/db/models/*.py` to understand persistence.
