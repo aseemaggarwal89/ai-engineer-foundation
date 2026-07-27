@@ -7,7 +7,7 @@ from app.application.ai.core.container import ServiceContainer
 from app.core.middleware.body_size import BodySizeLimitMiddleware
 from app.core.middleware.metrics_middleware import MetricsMiddleware
 
-# 🔴 MUST BE FIRST
+# Keep the project root importable when running the module directly.
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.append(str(ROOT_DIR))
 
@@ -36,9 +36,8 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # --------------------
-    # Startup
-    # --------------------
+    # Startup creates long-lived resources once per process. Request handlers
+    # reuse this AI container through app.state.container.
     logger.info("Application startup")
     settings = get_settings()
     container = ServiceContainer(settings)
@@ -49,12 +48,9 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    # ✅ Create once
     yield  # Application runs here
 
-    # --------------------
-    # Shutdown (future use)
-    # --------------------
+    # Shutdown closes long-lived network clients cleanly.
     await container.shutdown()
     logger.info("Application shutdown")
 
@@ -62,7 +58,7 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     settings = get_settings()
 
-    # 1️⃣ Logging first (everything after uses it)
+    # Logging first so startup, tracing, middleware, and routes share one format.
     setup_logging(settings.log_level)
     logger.info(
     "FastAPI service starting",
@@ -74,27 +70,24 @@ def create_app() -> FastAPI:
     },
     )
 
-    # 3️⃣ Create FastAPI app
+    # FastAPI owns the lifespan hook where the AI container is initialized.
     app = FastAPI(
         title=settings.app_name,
         debug=settings.environment == "local",
         lifespan=lifespan,
     )
 
-    # 2️⃣ Tracing second (captures startup + routes)
+    # Tracing is optional for local runs and enabled when an OTLP endpoint exists.
     if settings.ai.otlp_endpoint:
         setup_tracing(app, settings.app_name, settings.ai.otlp_endpoint)
-
-    # 4️⃣ Middleware (order matters)
 
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     app.add_middleware(SlowAPIMiddleware)
     
-    # metrics wrapper
+    # Metrics and request IDs wrap every request before route handlers run.
     app.add_middleware(MetricsMiddleware)
 
-    # request id first → available to logs + traces
     app.add_middleware(RequestIDMiddleware)
 
     app.add_middleware(
@@ -102,10 +95,9 @@ def create_app() -> FastAPI:
     max_body_size=settings.ai.max_request_bytes,
     )
     
-    # 5️⃣ Routers
     addRouters(app)
 
-    # 6️⃣ Global exception mapping
+    # Domain exceptions become consistent HTTP JSON responses here.
     addGlobalExceptionHandlers(app)
     
     return app
@@ -114,7 +106,7 @@ def create_app() -> FastAPI:
 # ASGI entrypoint
 # -------------------------
 
-# ✅ THIS IS WHAT UVICORN IMPORTS
+# Uvicorn imports this ASGI app.
 app = create_app()
 
 

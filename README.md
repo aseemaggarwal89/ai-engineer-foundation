@@ -23,6 +23,7 @@ The codebase is intentionally layered so you can study how an AI feature moves f
 - [Testing Notes](#testing-notes)
 - [Production Considerations](#production-considerations)
 - [Extension Guide](#extension-guide)
+- [AI Re-Entry Guide](#ai-re-entry-guide)
 - [Public Blog Series](#public-blog-series)
 
 ## Architecture
@@ -139,14 +140,27 @@ Useful URLs:
 
 Publish-ready learning articles are available in [docs/blogs](./docs/blogs/README.md).
 
+The recommended Medium publishing sequence is available in [docs/blogs/medium-series](./docs/blogs/medium-series/README.md). It starts from Python/FastAPI backend fundamentals and transitions step by step into enterprise AI backend implementation.
+
 The series explains this project step by step for developers learning AI integration with Python and FastAPI:
 
+0. Learning roadmap from FastAPI backend to enterprise AI backend
 1. Building a production-style AI backend with FastAPI
 2. Understanding the AI request lifecycle
 3. Using ports and adapters for Ollama/OpenAI routing
 4. Adding AI guardrails and response validation
 5. Caching AI responses with Redis
 6. Adding observability and production readiness
+
+## AI Re-Entry Guide
+
+If you return to the project after a break and need to remember how the AI integration works, start with [docs/ai-implementation-guide.md](./docs/ai-implementation-guide.md).
+
+It explains the complete flow:
+
+```text
+Route receives -> Use case protects -> Service orchestrates -> Router selects -> Adapter calls -> Pipeline trusts
+```
 
 ## Configuration
 
