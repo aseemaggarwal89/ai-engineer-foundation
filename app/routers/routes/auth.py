@@ -21,7 +21,6 @@ from app.domain.use_cases.user.login_user import LoginUserUseCase
 from app.schemas.auth import LoginRequest, TokenResponse
 
 from app.dependencies.use_cases import get_login_user_use_case
-from app.security.jwt import create_access_token
 from app.core.rate_limit import limiter
 
 from app.core.safe_task import safe_task
@@ -84,20 +83,18 @@ async def login(
     Domain exceptions are handled globally.
     """
 
-    user = await use_case.execute(
+    auth_result = await use_case.execute(
         email=data.email,
         password=data.password,
     )
 
-    token = create_access_token(user)
-
     background_tasks.add_task(
         safe_task,
         audit_service.log_login,
-        user.id,
+        auth_result.user.id,
     )
 
-    return TokenResponse(access_token=token)
+    return TokenResponse(access_token=auth_result.access_token)
 
 
 # ---------------------------------------------------------------------

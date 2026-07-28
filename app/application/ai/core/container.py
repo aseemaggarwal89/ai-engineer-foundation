@@ -129,4 +129,4 @@ class ServiceContainer:
         if hasattr(self, "openai_client"):
             await self.openai_client.close()
         await self.model_registry.close()
-        await self.redis.close()
+        await self.redis.aclose()

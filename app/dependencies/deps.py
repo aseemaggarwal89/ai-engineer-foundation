@@ -22,7 +22,7 @@ def settings():
 # -------------------------
 
 
-async def get_db_session() -> AsyncSession:
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """
     FastAPI dependency that provides a transactional async DB session.
     """

@@ -1,6 +1,7 @@
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 
 from app.core.config import Settings
@@ -8,9 +9,10 @@ from app.core.timeout import timeout_from_self
 from app.core.retry import db_retry
 from app.db.models.user_orm import UserORM
 from app.domain.entities.user import User
-from app.domain.exceptions.exceptions import ServiceError
+from app.domain.exceptions.exceptions import ServiceError, UserAlreadyExistsError
 from app.domain.interfaces.user_repository import UserRepository
 from app.repositories.mappers.user_mapper import orm_to_domain_user
+from app.security.email import normalize_email
 
 
 class SQLAlchemyUserRepository(UserRepository):
@@ -32,7 +34,7 @@ class SQLAlchemyUserRepository(UserRepository):
     @db_retry()
     async def get_by_email(self, email: str) -> Optional[User]:
         result = await self._session.execute(
-            select(UserORM).where(UserORM.email == email)
+            select(UserORM).where(UserORM.email == normalize_email(email))
         )
         orm_user = result.scalar_one_or_none()
         return orm_to_domain_user(orm_user) if orm_user else None
@@ -46,21 +48,25 @@ class SQLAlchemyUserRepository(UserRepository):
     ) -> User:
         orm_user = UserORM(
             id=str(user.id),
-            email=user.email,
+            email=normalize_email(user.email),
             is_active=user.is_active,
             role=user.role,
             password_hash=password_hash,
         )
 
-        # Push INSERT to DB (gets PK)
-        self._session.add(orm_user)
-        await self._session.flush()
+        try:
+            # Push INSERT to DB (gets PK)
+            self._session.add(orm_user)
+            await self._session.flush()
 
-        # Load DB-generated fields (id, created_at, etc.)
-        await self._session.refresh(orm_user)
+            # Load DB-generated fields (id, created_at, etc.)
+            await self._session.refresh(orm_user)
 
-        # Commit transaction
-        await self._session.commit()
+            # Commit transaction
+            await self._session.commit()
+        except IntegrityError as exc:
+            await self._session.rollback()
+            raise UserAlreadyExistsError("User with this email already exists") from exc
 
         return orm_to_domain_user(orm_user)
 
@@ -76,7 +82,7 @@ class SQLAlchemyUserRepository(UserRepository):
         if orm_user is None:
             raise ServiceError("Cannot save non-existing user")
 
-        orm_user.email = user.email
+        orm_user.email = normalize_email(user.email)
         orm_user.is_active = user.is_active
         orm_user.role = user.role
 

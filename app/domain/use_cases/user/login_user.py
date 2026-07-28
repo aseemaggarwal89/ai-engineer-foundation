@@ -1,10 +1,21 @@
 import logging
+from dataclasses import dataclass
+
 from app.core.tracer import traced
+from app.domain.entities.user import User
 from app.domain.interfaces.user_repository import UserRepository
 from app.domain.exceptions.exceptions import AuthenticationError
+from app.security.email import normalize_email
+from app.security.jwt import create_access_token
 from app.security.password import verify_password
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class AuthenticationResult:
+    user: User
+    access_token: str
 
 
 class LoginUserUseCase:
@@ -16,17 +27,19 @@ class LoginUserUseCase:
         self._user_repo = user_repo
 
     @traced("usecase.login_user")
-    async def execute(self, email: str, password: str):
+    async def execute(self, email: str, password: str) -> AuthenticationResult:
+        normalized_email = normalize_email(email)
+
         # 1️⃣ Login attempt
         logger.info(
             "User login attempt",
             extra={
                 "event": "user_login_attempt",
-                "email": email,
+                "email": normalized_email,
             },
         )
 
-        user = await self._user_repo.get_by_email(email)
+        user = await self._user_repo.get_by_email(normalized_email)
 
         if not user:
             # 2️⃣ Authentication failure (user not found)
@@ -35,7 +48,7 @@ class LoginUserUseCase:
                 extra={
                     "event": "user_login_failed",
                     "reason": "user_not_found",
-                    "email": email,
+                    "email": normalized_email,
                 },
             )
             raise AuthenticationError()
@@ -74,4 +87,7 @@ class LoginUserUseCase:
             },
         )
 
-        return user
+        return AuthenticationResult(
+            user=user,
+            access_token=create_access_token(user),
+        )
