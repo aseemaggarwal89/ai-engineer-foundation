@@ -1,14 +1,13 @@
 from app.application.ai.core.bullet_parser import BulletParser
-from app.application.ai.validator.request.ai_safety import AISafetyFilter
+from app.application.ai.domain.ai_pipeline_port import AIResponsePipeline
 from app.application.ai.validator.response.hallucination_guard import HallucinationGuard
 from app.application.ai.validator.response.response_scorer import AIResponseScorer
 from app.application.ai.validator.response.response_validator import AIResponseValidator
-from app.domain.exceptions.exceptions import ResponseValidationError
 
 
-class SummarizationPipeline:
+class SummarizationPipeline(AIResponsePipeline):
     """
-    Converts raw model text into trusted summary bullets.
+    Converts raw model text into validated summary bullets.
 
     Keep this pipeline deterministic and fast. Expensive judging/evaluation can
     be added later as another pipeline step or background observation path.

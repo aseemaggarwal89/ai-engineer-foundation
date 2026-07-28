@@ -10,8 +10,9 @@ class SummarizeTextUseCase:
     Application boundary for summarization.
 
     Workflow:
-    validate user input -> sanitize prompt text -> delegate AI orchestration
-    to SummaryService. This keeps HTTP and provider details out of the use case.
+    apply request-side safety checks -> validate and normalize permitted input
+    -> delegate prompt, cache, inference, and response processing to
+    SummaryService. This keeps HTTP and provider details out of the use case.
     """
 
     def __init__(

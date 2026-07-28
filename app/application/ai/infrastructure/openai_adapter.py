@@ -62,6 +62,9 @@ class OpenAIAdapter(AIModelPort):
     async def _generate(self, *, prompt: str, temperature: float, max_tokens: int) -> str:
 
         model = self.settings.model_name
+        if not model:
+            raise AIProviderError("OpenAI model is not configured")
+
         start = time.perf_counter()
 
         try:

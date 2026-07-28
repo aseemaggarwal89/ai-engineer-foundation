@@ -1,11 +1,22 @@
-from pydantic import BaseModel, Field
+from typing import Annotated
+
+from pydantic import BaseModel, Field, StringConstraints
+
+
+SummaryText = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=20_000,
+    ),
+]
 
 
 class SummaryRequest(BaseModel):
-    text: str = Field(
+    text: SummaryText = Field(
         ...,
-        min_length=1,
-        description="Text to summarize"
+        description="Text to summarize",
     )
 
 

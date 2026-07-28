@@ -8,7 +8,7 @@ from app.application.ai.domain.ai_capability import AICapability
 from app.application.ai.domain.ai_inference_port import AIInferencePort
 from app.application.ai.prompts.summary_prompt import SummaryPrompt
 from app.core.config import AISettings
-from app.domain.exceptions.exceptions import ResponseValidationError
+from app.domain.exceptions.exceptions import ResponseValidationError, ServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -42,13 +42,18 @@ class SummaryService:
 
     async def summarize(self, text: str) -> list[str]:
         # Prompt text is intentionally part of the cache key so prompt changes
-        # naturally invalidate stale cached summaries.
+        # naturally invalidate stale cached summaries. The explicit prompt
+        # version protects the cache when the prompt contract changes.
         prompt_text = self.prompt.build(text)
+        prompt_fingerprint = f"{self.prompt.VERSION}|{prompt_text}"
+        model = self.settings.model_name
+        if not model:
+            raise ServiceError("AI model is not configured")
 
         cache_key = self.cache.build_key(
             capability=AICapability.SUMMARIZATION.value,
-            prompt=prompt_text,
-            model=self.settings.model_name,
+            prompt=prompt_fingerprint,
+            model=model,
             temperature=self.settings.temperature,
             max_tokens=self.settings.max_tokens,
         )
