@@ -1,4 +1,7 @@
-# Setting Up a FastAPI Backend Project the Right Way
+# 02 - Setting Up a FastAPI Backend Project the Right Way
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 When I started this project, my first goal was simple:
 
@@ -28,9 +31,6 @@ If the base backend structure is messy, the AI implementation also becomes messy
 
 So before adding Ollama, OpenAI, Redis caching, guardrails, and model routing, I focused on creating a maintainable FastAPI foundation.
 
-Project repository:
-
-[AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
 
 ## Why Project Structure Matters
 

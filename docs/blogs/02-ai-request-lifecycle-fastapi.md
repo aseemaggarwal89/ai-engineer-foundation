@@ -1,4 +1,7 @@
-# The AI Request Lifecycle: From Postman to Model Response
+# 02 - The AI Request Lifecycle: From Postman to Model Response
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 When you send a request to an AI API, it can look simple from the outside.
 
@@ -258,4 +261,3 @@ Postman
 A production-style AI endpoint is not only a model call.
 
 It is a complete request lifecycle with validation, routing, fallback, caching, observability, and response safety.
-

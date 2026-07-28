@@ -1,4 +1,7 @@
-# Using Ports and Adapters for Ollama and OpenAI Provider Routing
+# 03 - Using Ports and Adapters for Ollama and OpenAI Provider Routing
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 One of the most useful design decisions in this project is that the application does not directly depend on Ollama or OpenAI.
 
@@ -231,4 +234,3 @@ With ports and adapters, you can evolve the infrastructure without rewriting the
 Provider routing is not just a nice abstraction.
 
 It is what lets an AI backend remain flexible as the AI ecosystem changes.
-

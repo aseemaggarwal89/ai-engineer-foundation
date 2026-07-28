@@ -1,4 +1,7 @@
-# Testing, Debugging, and Public Repo Readiness for a FastAPI AI Backend
+# 13 - Testing, Debugging, and Public Repo Readiness for a FastAPI AI Backend
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 After implementing the AI backend, I wanted to make the project public and use it for learning, interviews, and blog posts.
 

@@ -1,4 +1,7 @@
-# Next Step: Adding RAG to the AI Backend
+# 14 - Next Step: Adding RAG to the AI Backend
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 After implementing summarization, provider routing, caching, guardrails, and observability, the next natural feature is RAG.
 
@@ -256,4 +259,3 @@ How do I build AI that uses my own data?
 ```
 
 That is why RAG is the right next milestone.
-

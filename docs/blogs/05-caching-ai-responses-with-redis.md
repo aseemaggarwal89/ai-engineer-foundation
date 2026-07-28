@@ -1,4 +1,7 @@
-# Caching AI Responses with Redis in a FastAPI Backend
+# 05 - Caching AI Responses with Redis in a FastAPI Backend
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 AI calls can be slow.
 
@@ -231,4 +234,3 @@ AI caching is not just an optimization.
 It is part of the reliability and cost-control layer of an AI backend.
 
 Cache the right thing, with the right key, after validation.
-

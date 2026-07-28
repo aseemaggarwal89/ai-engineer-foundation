@@ -1,4 +1,7 @@
-# Beyond Hello World: Building a Production-Style AI Backend with FastAPI
+# 01 - Beyond Hello World: Building a Production-Style AI Backend with FastAPI
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 Most AI tutorials start with one endpoint that sends a prompt to a model and returns the answer.
 
@@ -248,4 +251,3 @@ The biggest lesson is this:
 **AI integration is not just prompt engineering. It is backend engineering.**
 
 The model is one dependency in a larger system. A good AI backend should be readable, testable, observable, and resilient.
-

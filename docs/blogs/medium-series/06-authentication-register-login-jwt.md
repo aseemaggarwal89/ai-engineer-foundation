@@ -1,4 +1,7 @@
-# Authentication in FastAPI: Register, Login, JWT, and Protected Routes
+# 06 - Authentication in FastAPI: Register, Login, JWT, and Protected Routes
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 Authentication is one of the most important parts of backend development.
 
@@ -217,4 +220,3 @@ For enterprise AI applications, authentication becomes the foundation for secure
 ## Next
 
 After authentication, the next topic is dependency injection and how the project wires routes, use cases, repositories, and AI services.
-

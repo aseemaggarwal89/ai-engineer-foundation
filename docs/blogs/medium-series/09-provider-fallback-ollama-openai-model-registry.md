@@ -1,4 +1,7 @@
-# Provider Abstraction: Ollama, OpenAI, Model Registry, and Inference Router
+# 09 - Provider Abstraction: Ollama, OpenAI, Model Registry, and Inference Router
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 One of the most important AI backend concepts in this project is provider abstraction.
 
@@ -258,4 +261,3 @@ Use Ollama first, then OpenAI if needed.
 ## Next
 
 Next, we will look at guardrails, Redis caching, response pipelines, and safe error handling.
-

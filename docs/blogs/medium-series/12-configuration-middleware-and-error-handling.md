@@ -1,4 +1,7 @@
-# Configuration, Middleware, and Error Handling in a Production-Style FastAPI AI Backend
+# 12 - Configuration, Middleware, and Error Handling in a Production-Style FastAPI AI Backend
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 After building routes, authentication, database migrations, and the AI pipeline, I realized there is another layer that is easy to ignore:
 

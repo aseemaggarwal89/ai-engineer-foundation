@@ -1,4 +1,7 @@
-# AI Integration Architecture: From Model Call to Enterprise Pipeline
+# 08 - AI Integration Architecture: From Model Call to Enterprise Pipeline
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 After learning FastAPI backend fundamentals, I added AI integration.
 
@@ -246,4 +249,3 @@ That memory hook helped me remember the entire flow.
 ## Next
 
 Next, we will go deeper into provider abstraction: Ollama, OpenAI, model registry, inference router, and fallback.
-

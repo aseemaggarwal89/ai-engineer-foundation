@@ -1,4 +1,7 @@
-# Dependency Injection in FastAPI: The Backbone of Clean Backend Design
+# 07 - Dependency Injection in FastAPI: The Backbone of Clean Backend Design
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 Dependency injection is one of the most important concepts I learned while building this project.
 
@@ -190,4 +193,3 @@ The dependency layer wires everything behind the scenes.
 ## Next
 
 After backend foundations, the next phase is AI integration architecture.
-

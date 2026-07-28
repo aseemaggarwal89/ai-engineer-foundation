@@ -1,4 +1,7 @@
-# Logging, Tracing, Observability, and Production Readiness for AI Backends
+# 11 - Logging, Tracing, Observability, and Production Readiness for AI Backends
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 Once the AI pipeline works, the next challenge is debugging and operating it.
 

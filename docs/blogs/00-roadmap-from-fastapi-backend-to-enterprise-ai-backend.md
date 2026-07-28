@@ -1,4 +1,7 @@
-# From Python FastAPI Backend to Enterprise AI Backend: My Learning Roadmap
+# 00 - From Python FastAPI Backend to Enterprise AI Backend: My Learning Roadmap
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 When I started this project, my goal was simple:
 
@@ -674,4 +677,3 @@ Next, I plan to extend this project with RAG: document ingestion, embeddings, ve
 
 This has been a valuable transition from learning FastAPI to understanding AI backend engineering.
 ```
-

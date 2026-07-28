@@ -1,4 +1,7 @@
-# Observability and Production Readiness for AI Backends
+# 06 - Observability and Production Readiness for AI Backends
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 When an AI endpoint fails, you need to answer practical questions quickly:
 
@@ -250,4 +253,3 @@ It is the combination of many small engineering decisions:
 - predictable failures
 
 That is what turns an AI demo into an AI backend.
-

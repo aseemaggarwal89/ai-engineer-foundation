@@ -20,13 +20,13 @@ The goal of the series is to help readers move beyond a simple "call an LLM from
 
 ## Suggested Publishing Order
 
-0. [From Python FastAPI Backend to Enterprise AI Backend: My Learning Roadmap](./00-roadmap-from-fastapi-backend-to-enterprise-ai-backend.md)
-1. [Beyond Hello World: Building a Production-Style AI Backend with FastAPI](./01-building-a-production-style-ai-backend-with-fastapi.md)
-2. [The AI Request Lifecycle: From Postman to Model Response](./02-ai-request-lifecycle-fastapi.md)
-3. [Using Ports and Adapters for Ollama and OpenAI Provider Routing](./03-ai-provider-routing-ports-and-adapters.md)
-4. [Guardrails for AI APIs: Validating Prompts and Model Responses](./04-ai-api-guardrails-validation.md)
-5. [Caching AI Responses with Redis in a FastAPI Backend](./05-caching-ai-responses-with-redis.md)
-6. [Observability and Production Readiness for AI Backends](./06-observability-and-production-readiness.md)
+0. [00 - From Python FastAPI Backend to Enterprise AI Backend: My Learning Roadmap](./00-roadmap-from-fastapi-backend-to-enterprise-ai-backend.md)
+1. [01 - Beyond Hello World: Building a Production-Style AI Backend with FastAPI](./01-building-a-production-style-ai-backend-with-fastapi.md)
+2. [02 - The AI Request Lifecycle: From Postman to Model Response](./02-ai-request-lifecycle-fastapi.md)
+3. [03 - Using Ports and Adapters for Ollama and OpenAI Provider Routing](./03-ai-provider-routing-ports-and-adapters.md)
+4. [04 - Guardrails for AI APIs: Validating Prompts and Model Responses](./04-ai-api-guardrails-validation.md)
+5. [05 - Caching AI Responses with Redis in a FastAPI Backend](./05-caching-ai-responses-with-redis.md)
+6. [06 - Observability and Production Readiness for AI Backends](./06-observability-and-production-readiness.md)
 
 ## How To Use These Posts
 

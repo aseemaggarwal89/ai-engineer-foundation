@@ -1,4 +1,7 @@
-# Guardrails, Redis Cache, Response Pipeline, and Safe Error Handling
+# 10 - Guardrails, Redis Cache, Response Pipeline, and Safe Error Handling
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 After provider integration, the next question is:
 
@@ -249,4 +252,3 @@ For this project, that boundary is the response pipeline.
 ## Next
 
 Next, we will look at logging, tracing, observability, and production readiness.
-

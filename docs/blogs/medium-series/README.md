@@ -34,20 +34,20 @@ This series is written for:
 
 ## Publishing Order
 
-1. [Why I Built This Project: From Python FastAPI to Enterprise AI Backend](./01-why-i-built-this-project-fastapi-to-ai-backend.md)
-2. [Setting Up a FastAPI Backend Project the Right Way](./02-fastapi-project-setup-and-architecture.md)
-3. [Database Migrations with Alembic in a FastAPI Project](./03-database-migrations-with-alembic.md)
-4. [Understanding Async Programming in FastAPI](./04-async-programming-in-fastapi.md)
-5. [Creating a Clean Routing Mechanism in FastAPI](./05-routing-mechanism-in-fastapi.md)
-6. [Authentication in FastAPI: Register, Login, JWT, and Protected Routes](./06-authentication-register-login-jwt.md)
-7. [Dependency Injection in FastAPI: The Backbone of Clean Backend Design](./07-dependency-injection-clean-backend-design.md)
-8. [AI Integration Architecture: From Model Call to Enterprise Pipeline](./08-ai-integration-enterprise-architecture.md)
-9. [Provider Abstraction: Ollama, OpenAI, Model Registry, and Inference Router](./09-provider-fallback-ollama-openai-model-registry.md)
-10. [Guardrails, Redis Cache, Response Pipeline, and Safe Error Handling](./10-guardrails-cache-response-pipeline-error-handling.md)
-11. [Logging, Tracing, Observability, and Production Readiness for AI Backends](./11-observability-production-readiness-ai-backends.md)
-12. [Configuration, Middleware, and Error Handling in a Production-Style FastAPI AI Backend](./12-configuration-middleware-and-error-handling.md)
-13. [Testing, Debugging, and Public Repo Readiness for a FastAPI AI Backend](./13-testing-debugging-and-public-repo-readiness.md)
-14. [Next Step: Adding RAG to the AI Backend](./14-future-roadmap-rag-integration.md)
+1. [01 - Why I Built This Project: From Python FastAPI to Enterprise AI Backend](./01-why-i-built-this-project-fastapi-to-ai-backend.md)
+2. [02 - Setting Up a FastAPI Backend Project the Right Way](./02-fastapi-project-setup-and-architecture.md)
+3. [03 - Database Migrations with Alembic in a FastAPI Project](./03-database-migrations-with-alembic.md)
+4. [04 - Understanding Async Programming in FastAPI](./04-async-programming-in-fastapi.md)
+5. [05 - Creating a Clean Routing Mechanism in FastAPI](./05-routing-mechanism-in-fastapi.md)
+6. [06 - Authentication in FastAPI: Register, Login, JWT, and Protected Routes](./06-authentication-register-login-jwt.md)
+7. [07 - Dependency Injection in FastAPI: The Backbone of Clean Backend Design](./07-dependency-injection-clean-backend-design.md)
+8. [08 - AI Integration Architecture: From Model Call to Enterprise Pipeline](./08-ai-integration-enterprise-architecture.md)
+9. [09 - Provider Abstraction: Ollama, OpenAI, Model Registry, and Inference Router](./09-provider-fallback-ollama-openai-model-registry.md)
+10. [10 - Guardrails, Redis Cache, Response Pipeline, and Safe Error Handling](./10-guardrails-cache-response-pipeline-error-handling.md)
+11. [11 - Logging, Tracing, Observability, and Production Readiness for AI Backends](./11-observability-production-readiness-ai-backends.md)
+12. [12 - Configuration, Middleware, and Error Handling in a Production-Style FastAPI AI Backend](./12-configuration-middleware-and-error-handling.md)
+13. [13 - Testing, Debugging, and Public Repo Readiness for a FastAPI AI Backend](./13-testing-debugging-and-public-repo-readiness.md)
+14. [14 - Next Step: Adding RAG to the AI Backend](./14-future-roadmap-rag-integration.md)
 
 ## How To Use This Series On Medium
 

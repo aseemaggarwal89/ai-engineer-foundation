@@ -1,4 +1,7 @@
-# Guardrails for AI APIs: Validating Prompts and Model Responses
+# 04 - Guardrails for AI APIs: Validating Prompts and Model Responses
+
+📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
+
 
 AI APIs need guardrails on both sides of the model call.
 
@@ -268,4 +271,3 @@ Guardrails are not only about safety.
 They are also about reliability, cost control, and predictable API behavior.
 
 If your backend cannot trust user input or model output, guardrails are the system that stands between chaos and a clean API contract.
-
