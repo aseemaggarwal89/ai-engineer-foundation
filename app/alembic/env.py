@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+from typing import Any, cast
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT_DIR))
@@ -25,11 +26,11 @@ if config.config_file_name is not None:
 
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
-# metadata
 from app.db.db import Base
-from app.db.models.health import HealthStatus  # noqa: F401 # force model registration
-from app.db.models.audit_orm import AuditORM  # noqa: F401 # force model registration
-from app.db.models.user_orm import UserORM  # noqa: F401 # force model registration
+
+# Import mapped model modules before Alembic reads Base.metadata.
+from app.db.models import AuditORM, HealthStatus, UserORM  # noqa: F401
+
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
@@ -79,8 +80,12 @@ def do_run_migrations(connection):
 
 
 async def run_migrations_online() -> None:
-    connectable = async_engine_from_config(
+    config_section = cast(
+        dict[str, Any],
         config.get_section(config.config_ini_section),
+    )
+    connectable = async_engine_from_config(
+        config_section,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

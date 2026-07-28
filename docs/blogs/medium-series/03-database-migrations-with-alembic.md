@@ -2,8 +2,7 @@
 
 📌 GitHub Repository: [AI Engineer Foundation](https://github.com/aseemaggarwal89/ai-engineer-foundation)
 
-
-After setting up the FastAPI project structure, the next important backend concept I wanted to understand was database migration.
+After setting up the FastAPI project structure, the next backend concept I wanted to understand was database migration.
 
 At the beginning, it is tempting to think:
 
@@ -17,7 +16,7 @@ But real backend systems change over time.
 
 You add users.
 
-You add authentication.
+You add authentication fields.
 
 You add audit logs.
 
@@ -27,33 +26,27 @@ You change columns.
 
 You add indexes.
 
-You fix schema mistakes.
-
 If those database changes are not tracked properly, the application becomes difficult to run consistently across local, staging, and production environments.
 
 That is where Alembic becomes important.
 
+## What Alembic Does
 
+Alembic manages versioned database schema migrations.
 
-## What Problem Does Alembic Solve?
+In simple words, it helps move the database from one known schema version to another known schema version.
 
-Alembic solves schema versioning.
+It also stores the currently applied migration revision in the database using an `alembic_version` table.
 
-Instead of manually changing the database, every schema change becomes a versioned migration file.
-
-That means the database can move from one known state to another known state.
-
-For example:
+That means the backend can answer:
 
 ```text
-initial schema
--> add audit table
--> add email and password hash to users
--> change audit id type
--> current schema
+Which schema version is this database currently using?
+Which migrations are available?
+Which migration is the current head?
 ```
 
-This is important because backend code and database schema must evolve together.
+This is important because application code and database schema must evolve together.
 
 ## Why Manual Database Changes Are Risky
 
@@ -68,53 +61,54 @@ That creates problems:
 - schema history is not visible in Git
 - debugging becomes harder
 
-For example, imagine adding an `email` column to a users table.
+For example, if the code expects a `users.email` column but the database does not have it, the application fails at runtime.
 
-If the code expects `email`, but the database does not have it, the app fails at runtime.
-
-A migration makes that change explicit.
+A migration makes that schema change explicit.
 
 ## Database Stack In This Project
 
-This project uses:
+This project currently uses:
 
-- PostgreSQL
-- SQLAlchemy
+- PostgreSQL as the application database
+- SQLAlchemy 2.x
+- async SQLAlchemy engine
 - async SQLAlchemy sessions
-- Alembic
+- Alembic migration files
+- environment-based database configuration
 
-Database setup lives in:
+The relevant paths are:
+
+```text
+app/db/db.py
+app/db/models/
+app/alembic.ini
+app/alembic/env.py
+app/alembic/versions/
+```
+
+The declarative base, async engine, and async session factory live in:
 
 ```text
 app/db/db.py
 ```
 
-ORM models live in:
+The database URL comes from application settings:
 
-```text
-app/db/models/
+```python
+settings.database_url
 ```
 
-Alembic configuration lives in:
+The app loads that value through:
 
 ```text
-app/alembic.ini
-app/alembic/
+app/core/config.py
 ```
 
-Migration versions live in:
+So Alembic and the application use the same configuration source instead of maintaining two separate database URLs.
 
-```text
-app/alembic/versions/
-```
+## Actual ORM Models
 
-This keeps database configuration, models, and migration history easy to find.
-
-## SQLAlchemy Models
-
-SQLAlchemy models define the database tables in Python.
-
-This project has models such as:
+The mapped SQLAlchemy ORM models currently are:
 
 ```text
 UserORM
@@ -122,226 +116,392 @@ AuditORM
 HealthStatus
 ```
 
-Their responsibilities are different:
-
-- `UserORM` stores users, email, password hash, active status, and role.
-- `AuditORM` stores operational events such as registration and login.
-- `HealthStatus` supports health-check behavior.
-
-These models describe the desired structure of the database.
-
-Alembic then helps convert model changes into migration files.
-
-## Alembic Migration Flow
-
-The normal migration flow is:
+They live under:
 
 ```text
-change SQLAlchemy model
--> generate Alembic revision
--> inspect generated migration
--> apply migration
--> commit migration file
+app/db/models/
 ```
 
-In this project, commands use the Alembic config file inside the app folder:
-
-```bash
-alembic -c app/alembic.ini revision --autogenerate -m "describe change"
-```
-
-Then apply the migration:
-
-```bash
-alembic -c app/alembic.ini upgrade head
-```
-
-If needed, rollback one migration:
-
-```bash
-alembic -c app/alembic.ini downgrade -1
-```
-
-The migration file should be reviewed before applying it.
-
-## Why Autogenerate Is Helpful
-
-Alembic autogenerate compares:
+There is also a Pydantic model named:
 
 ```text
-SQLAlchemy model metadata
-vs
-current database schema
+HealthResponse
 ```
 
-Then it creates a migration script.
+That one is not a database table. It is an API response schema.
 
-This is useful because it reduces manual migration writing.
+This distinction matters because not every Python class in the database folder is a mapped table.
 
-But autogenerate is not magic.
+## `UserORM`
 
-It should be treated as a first draft.
+`UserORM` maps to:
 
-## Always Inspect Generated Migrations
+```text
+users
+```
 
-Before applying a migration, I should inspect:
+It currently stores:
 
-- table names
-- column names
-- column types
-- nullable settings
-- default values
-- indexes
-- constraints
-- enum changes
-- downgrade logic
+- `id`, string primary key, indexed, generated in Python with `uuid.uuid4()`
+- `is_active`, boolean, non-null, Python default `True`
+- `role`, SQLAlchemy enum named `user_role`, non-null, Python default `USER`
+- `email`, string, non-null, unique index
+- `password_hash`, string, non-null
 
-This is important because a wrong migration can damage production data.
+This supports registration, login, protected routes, and role-based access.
 
-For example, changing a column type may require a custom SQL expression.
+## `AuditORM`
 
-Dropping a column may permanently remove data.
+`AuditORM` maps to:
 
-Autogenerate may not understand every intention.
+```text
+audits
+```
 
-The developer must still review the migration.
+It currently stores:
 
-## How Alembic Finds Models
+- `id`, string primary key with length 36, generated in Python with `uuid.uuid4()`
+- `event_type`, string, non-null
+- `user_id`, string, non-null
+- `created_at`, timezone-aware `DateTime`, non-null, server default `now()`
 
-Alembic needs access to SQLAlchemy metadata.
+The current audit table stores operational authentication events, not AI prompt or model response content.
 
-In this project, that is configured in:
+## `HealthStatus`
+
+`HealthStatus` maps to:
+
+```text
+health_status
+```
+
+It currently stores:
+
+- `id`, primary key
+- `status`, string with length 20
+
+This supports health-check behavior in the learning project.
+
+## Alembic Metadata Registration
+
+Alembic needs SQLAlchemy metadata to compare the Python models with the database schema.
+
+The Alembic environment file is:
 
 ```text
 app/alembic/env.py
 ```
 
-The file imports the SQLAlchemy base:
+It imports:
 
 ```python
 from app.db.db import Base
+from app.db.models import AuditORM, HealthStatus, UserORM
 ```
 
-Then sets:
+Then it sets:
 
 ```python
 target_metadata = Base.metadata
 ```
 
-This tells Alembic what models exist.
+This ensures the mapped models are registered before Alembic evaluates metadata.
 
-The environment file also imports model classes so they are registered:
+Without importing the model modules, Alembic autogenerate may not see all tables.
 
-```python
-from app.db.models.health import HealthStatus
-from app.db.models.audit_orm import AuditORM
-from app.db.models.user_orm import UserORM
+## Actual Migration Chain
+
+The current Alembic chain is linear and has one head.
+
+The real chain is:
+
+```text
+base
+-> 257ac9345cd9 initial schema
+-> 51c802d33f74 add email and password hash to user
+-> 9c54bce0c2e0 change audits id to uuid string
+-> 77ff9f8c925d change audits id to uuid
+-> 06dea7f83838 change audits id to string
 ```
 
-This matters because if a model is not imported, Alembic may not see it during autogeneration.
+The current head is:
+
+```text
+06dea7f83838
+```
+
+Two audit-related revisions are currently no-op placeholder revisions:
+
+```text
+9c54bce0c2e0
+77ff9f8c925d
+```
+
+The final audit migration changes the existing `audits.id` column to `String(36)`.
+
+It does not create the audit table again because the initial migration already creates `audits`.
+
+That distinction is important.
+
+Creating the same table twice would make an upgrade from an empty database fail.
+
+## Migration Commands
+
+Useful Alembic commands for this repository are:
+
+```bash
+alembic -c app/alembic.ini heads
+alembic -c app/alembic.ini history
+alembic -c app/alembic.ini current
+alembic -c app/alembic.ini upgrade head
+```
+
+Create a new migration:
+
+```bash
+alembic -c app/alembic.ini revision --autogenerate -m "describe change"
+```
+
+Rollback one revision:
+
+```bash
+alembic -c app/alembic.ini downgrade -1
+```
+
+But rollback should not be treated as automatically safe in production.
+
+I will explain why later in this post.
+
+## Autogenerate Is A First Draft
+
+Alembic autogenerate compares:
+
+```text
+SQLAlchemy MetaData
+vs
+the configured database schema
+```
+
+Then it creates a migration script.
+
+This is helpful, but it is not a final migration.
+
+Autogenerate is a first draft.
+
+For example, Alembic may not understand the intention behind:
+
+- column renames
+- table renames
+- data backfills
+- destructive changes
+- complex type conversions
+- enum changes
+
+A rename may appear as:
+
+```text
+drop old column
+add new column
+```
+
+That could lose data if applied blindly.
+
+So every generated migration must be reviewed.
 
 ## Async SQLAlchemy And Alembic
 
 The application uses async SQLAlchemy at runtime.
 
-Runtime database sessions are async because FastAPI endpoints and repositories use `async` database calls.
-
-The database engine is created with:
+The async engine is created with:
 
 ```python
-create_async_engine(...)
+create_async_engine(settings.database_url)
 ```
 
-Alembic also needs to connect correctly to the database.
+The session factory is:
 
-That is why `env.py` uses async migration support:
+```python
+AsyncSessionLocal
+```
+
+Alembic is also configured to use an async SQLAlchemy engine in:
+
+```text
+app/alembic/env.py
+```
+
+The important detail is this:
+
+```text
+The database connection is managed through an async SQLAlchemy engine,
+while Alembic migration operations run through a synchronous migration
+context using connection.run_sync(...).
+```
+
+In code, the project uses:
 
 ```python
 async_engine_from_config(...)
-```
-
-and runs migrations through:
-
-```python
 await connection.run_sync(do_run_migrations)
 ```
 
-This bridge allows Alembic to work with the async database engine while still running migration operations safely.
+So the migration connection is async-managed, but Alembic operations still execute through the normal synchronous migration context.
+
+That is the correct mental model.
 
 ## `create_all()` vs Alembic
 
-In this project, the app currently calls:
+Earlier, the application startup called:
 
 ```python
 Base.metadata.create_all
 ```
 
-during local startup.
+That is convenient while learning, but it can hide missing migrations.
 
-That is convenient while learning because it helps create missing tables quickly.
+`create_all()` can create missing tables, but it does not provide controlled, versioned schema evolution.
 
-But production should not rely on `create_all()` for schema evolution.
+The project now restricts `create_all()` behind an explicit local-only opt-in setting:
 
-The production approach should be:
+```text
+AUTO_CREATE_TABLES=true
+ENVIRONMENT=local
+```
+
+By default, startup does not create tables automatically.
+
+The preferred flow is:
 
 ```text
 run Alembic migrations
 -> start application
 ```
 
-Why?
+This makes migrations the source of schema creation and schema evolution.
 
-Because migrations are versioned, reviewable, and repeatable.
+## Current Audit Persistence
 
-`create_all()` can create missing tables, but it does not manage schema changes with the same control.
+The project currently persists audit events for:
 
-It will not replace a careful migration strategy.
+- user registration
+- user login
 
-## Migration Files Are Part Of The Codebase
+These are scheduled as FastAPI background tasks from the authentication routes.
 
-Migration files should be committed to Git.
+Audit writing uses:
 
-They are not temporary files.
+```text
+AuditService
+AuditRepository
+AuditORM
+```
 
-They explain how the database moved from one version to another.
+The audit implementation currently stores:
 
-This is important for:
+- user ID
+- event type
+- created timestamp
 
-- local setup
-- staging deployments
-- production deployments
-- rollback planning
-- onboarding new developers
-- debugging schema issues
+It does not currently audit:
 
-If the application code is versioned but the database schema is not, the backend is incomplete.
+- protected route access
+- AI summarization requests
+- prompts
+- raw model responses
+- provider latency
+- token usage
 
-## Audit Table Learning
+Those could be future extensions, but they are not current behavior.
 
-One useful table in this project is the audit table.
+## Future AI Audit Design
 
-Audit logging teaches that backend systems often need to store operational events.
+For future AI features, audit metadata could include:
 
-Examples:
+- request ID
+- user ID
+- operation type
+- provider
+- model
+- execution status
+- latency
+- token usage
+- prompt template version
+- safety outcome
 
-- user registered
-- user logged in
-- admin action happened
-- protected route accessed
-- AI request submitted
+But raw prompts and raw model responses should be treated carefully.
 
-For AI systems, audit tables can later become even more useful.
+They may contain:
 
-They can support:
+- secrets
+- personal data
+- private business information
+- regulated data
 
-- prompt audit
-- model usage tracking
-- user-level activity history
-- compliance reports
-- debugging workflows
-- incident investigation
+If raw prompts or responses are ever stored, the design should include:
 
-This connects database design with AI backend production readiness.
+- redaction
+- retention policy
+- encryption
+- access control
+- compliance review
+- clear user expectations
+
+For now, this project does not store raw prompts or model responses in the audit table.
+
+## Production Migration Safety
+
+Migrations are powerful, but not every migration is safe to run blindly.
+
+Risky examples include:
+
+- dropping populated columns
+- changing incompatible column types
+- adding non-null columns without defaults or backfills
+- renaming columns as drop-and-add operations
+- adding uniqueness when duplicate data may already exist
+- changing enum values incorrectly
+
+Also, a downgrade is not always the safest production rollback.
+
+For destructive migrations, a forward-fix migration can be safer than trying to downgrade.
+
+A safer production pattern is:
+
+```text
+expand
+-> deploy compatible code
+-> backfill data
+-> switch reads and writes
+-> contract in a later migration
+```
+
+This may be more than a small learning project needs, but it is an important production concept.
+
+## Debugging Schema Problems
+
+Suppose the app fails with:
+
+```text
+column users.email does not exist
+```
+
+That usually means:
+
+```text
+The application code expects a newer schema,
+but the database has not been migrated.
+```
+
+Useful commands:
+
+```bash
+alembic -c app/alembic.ini current
+alembic -c app/alembic.ini heads
+alembic -c app/alembic.ini history
+alembic -c app/alembic.ini upgrade head
+```
+
+The fix may be to apply pending migrations, not to change the route or repository code.
 
 ## How This Helps AI Backends
 
@@ -352,9 +512,9 @@ But AI applications often need persistence.
 For example:
 
 - users
+- audit events
 - API keys
-- audit logs
-- prompt history
+- prompt templates
 - cached metadata
 - document records
 - embeddings
@@ -377,60 +537,11 @@ That is why learning Alembic now is useful.
 
 It prepares the backend for more advanced AI features later.
 
-## Production Considerations
-
-For production systems, I would follow these habits:
-
-- run migrations before starting the new app version
-- review generated migrations before applying them
-- back up important databases before risky schema changes
-- avoid destructive migrations without a rollback plan
-- keep migrations small and focused
-- test migrations against staging data
-- document manual migration steps if needed
-- monitor application errors after deployment
-
-Database migration is part of deployment engineering.
-
-It should not be treated as an afterthought.
-
-## Common Debugging Scenario
-
-Suppose the app fails with an error like:
-
-```text
-column users.email does not exist
-```
-
-That usually means:
-
-```text
-The application code expects a newer schema,
-but the database has not been migrated.
-```
-
-The fix is not to change the route.
-
-The first thing to check is:
-
-```bash
-alembic -c app/alembic.ini current
-alembic -c app/alembic.ini history
-```
-
-Then apply pending migrations if needed:
-
-```bash
-alembic -c app/alembic.ini upgrade head
-```
-
-This debugging habit saves time.
-
 ## What I Learned
 
 Alembic taught me that backend development is not only writing Python code.
 
-It also means managing change safely.
+It also means managing database change safely.
 
 Database schema is part of the application.
 

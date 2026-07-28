@@ -84,20 +84,23 @@ class AISettings(BaseModel):
         ]
 
         return any(
-            route
-            and (
-                route.primary == AIProvider.OPENAI
-                or route.fallback == AIProvider.OPENAI
-            )
+            self._route_uses_openai(route)
             for route in routes
         )
 
+    @staticmethod
+    def _route_uses_openai(route) -> bool:
+        if not route:
+            return False
+
+        return route.primary == AIProvider.OPENAI or route.fallback == AIProvider.OPENAI
+
     def _valid_openai_key(self) -> bool:
-        return bool(
-            self.openai_api_key
-            and self.openai_api_key.startswith("sk-")
-            and self.openai_api_key != "your_openai_api_key_here"
-        )
+        if not self.openai_api_key:
+            return False
+
+        is_placeholder = self.openai_api_key == "your_openai_api_key_here"
+        return self.openai_api_key.startswith("sk-") and not is_placeholder
 
 # =========================================================
 # Root Settings
@@ -118,6 +121,7 @@ class Settings(BaseSettings):
     app_name: str = "AI Engineer"
     environment: Environment = Environment.LOCAL
     log_level: str = "INFO"
+    auto_create_tables: bool = False
 
     # --------------------
     # Database

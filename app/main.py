@@ -19,7 +19,7 @@ import uvicorn
 from fastapi import FastAPI
 
 from app.core.logging import setup_logging
-from app.core.config import get_settings
+from app.core.config import Environment, get_settings
 from app.db.db import engine, Base
 from app.core.exception_registry import addGlobalExceptionHandlers
 from app.routers.routers import addRouters
@@ -44,9 +44,14 @@ async def lifespan(app: FastAPI):
     await container.startup()
     app.state.container = container
 
-    logging.getLogger(__name__).info("Initializing database")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    if settings.auto_create_tables and settings.environment == Environment.LOCAL:
+        logger.warning(
+            "Creating missing tables from SQLAlchemy metadata. "
+            "Use Alembic migrations for controlled schema changes.",
+            extra={"event": "database_create_all_enabled"},
+        )
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
     yield  # Application runs here
 

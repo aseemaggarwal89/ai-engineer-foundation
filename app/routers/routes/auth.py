@@ -5,7 +5,7 @@ from app.domain.use_cases.user.list_users import ListUsersUseCase
 from app.schemas.user import UserListResponse, UserRegisterRequest, UserResponse
 from app.domain.use_cases.user.register_user import RegisterUserUseCase
 from app.dependencies.use_cases import (
-    get_list_users_use_case, 
+    get_list_users_use_case,
     get_register_user_use_case
 )
 from app.security.authorization import require_role

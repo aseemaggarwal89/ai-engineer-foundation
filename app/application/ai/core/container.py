@@ -70,9 +70,8 @@ class ServiceContainer:
 
         # Register OpenAI only when a real key is present. This keeps Ollama-only
         # development free from unnecessary cloud-provider setup.
-        has_openai_key = (
-            self.ai_settings.openai_api_key
-            and self.ai_settings.openai_api_key.startswith("sk-")
+        has_openai_key = self.ai_settings.openai_api_key and (
+            self.ai_settings.openai_api_key.startswith("sk-")
         )
         if has_openai_key:
             self.openai_client = AsyncOpenAI(

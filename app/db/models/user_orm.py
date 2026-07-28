@@ -7,7 +7,7 @@ from app.db.db import Base
 from app.domain.entities.user_role import UserRole
 
 
-class UserORM(Base):    
+class UserORM(Base):
     __tablename__ = "users"
 
     id: Mapped[str] = mapped_column(
