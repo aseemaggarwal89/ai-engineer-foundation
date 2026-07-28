@@ -1,7 +1,7 @@
+from collections.abc import AsyncGenerator
 from functools import lru_cache
 from fastapi import Depends
-from app.application.ai.prompts.summary_prompt import SummaryPrompt
-from app.core.config import AISettings, Settings, get_settings
+from app.core.config import get_settings
 from app.services.audit_service import AuditService
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.audit_repository import AuditRepository

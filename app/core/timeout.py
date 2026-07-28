@@ -15,9 +15,9 @@ def timeout_from_self(func):
                 func(self, *args, **kwargs),
                 timeout=self.timeout_seconds,
             )
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as exc:
             raise ServiceError(
                 f"{func.__name__} timed out after {self.timeout_seconds}s"
-            )
+            ) from exc
         
     return wrapper

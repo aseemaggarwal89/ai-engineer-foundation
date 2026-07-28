@@ -1,5 +1,3 @@
-import asyncio
-from functools import wraps
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -9,7 +7,6 @@ from app.core.config import Settings
 from app.core.timeout import timeout_from_self
 from app.core.retry import db_retry
 from app.db.models.user_orm import UserORM
-from app.dependencies.deps import settings
 from app.domain.entities.user import User
 from app.domain.exceptions.exceptions import ServiceError
 from app.domain.interfaces.user_repository import UserRepository
@@ -93,42 +90,3 @@ class SQLAlchemyUserRepository(UserRepository):
     async def list_all(self) -> List[User]:
         result = await self._session.execute(select(UserORM))
         return [orm_to_domain_user(u) for u in result.scalars().all()]
-    
-
-# class UserRepository:
-#     def __init__(
-#         self,
-#         session: AsyncSession,
-#     ):
-#         self._session = session
-
-#     async def get_by_id(self, user_id: str) -> UserORM | None:
-#         result = await self._session.execute(
-#             select(UserORM).where(UserORM.id == user_id)
-#         )
-#         return result.scalar_one_or_none()
-    
-#     async def get_by_email(self, email: str) -> UserORM | None:
-#         result = await self._session.execute(
-#             select(UserORM).where(UserORM.email == email)
-#         )
-#         return result.scalar_one_or_none()
-    
-    # async def save(self, user: UserORM) -> UserORM:
-    #     # Push INSERT to DB (gets PK)
-    #     self._session.add(user)
-    #     await self._session.flush()
-
-    #     # Load DB-generated fields (id, created_at, etc.)
-    #     await self._session.refresh(user)
-
-    #     # Commit transaction
-    #     await self._session.commit()
-
-    #     return user
-    
-#     async def list_all_users(self) -> list[UserORM]:
-#         result = await self._session.execute(
-#             select(UserORM)
-#         )
-#         return result.scalars().all()

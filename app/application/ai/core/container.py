@@ -126,5 +126,7 @@ class ServiceContainer:
 
     async def shutdown(self):
         await self.ollama_client.aclose()
+        if hasattr(self, "openai_client"):
+            await self.openai_client.close()
         await self.model_registry.close()
         await self.redis.close()
