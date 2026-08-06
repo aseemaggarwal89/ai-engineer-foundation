@@ -39,6 +39,8 @@ class AISettings(BaseModel):
     # Redis
     redis_host: str = "redis"
     redis_port: int = 6379
+    cache_namespace: str = "local"
+    cache_ttl_seconds: int = 3600
 
     # Tracing
     otlp_endpoint: str | None = None

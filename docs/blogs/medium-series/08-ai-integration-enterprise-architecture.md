@@ -283,7 +283,7 @@ build prompt
 -> check Redis
 -> call inference router on cache miss
 -> run response pipeline
--> reject low-quality output
+-> reject output that does not satisfy the response contract
 -> cache validated bullets
 -> return bullets
 ```
@@ -309,15 +309,17 @@ The cache key includes:
 ```text
 capability
 prompt version and prompt text
-model
+routing-policy identity
 temperature
 max tokens
+cache namespace
+cache schema version
 ```
 
 Then the full key input is hashed with SHA-256:
 
 ```text
-ai_cache:<sha256>
+ai_cache:{namespace}:v{schema_version}:<sha256>
 ```
 
 This means raw user text is not visible in the Redis key.
@@ -510,7 +512,7 @@ raw model text
 -> bullet parsing
 -> bullet validation
 -> length guard
--> quality scoring
+-> structural scoring
 ```
 
 The parser lives in:
@@ -527,7 +529,7 @@ app/application/ai/validator/response/
 
 The pipeline does not prove that every model statement is factually correct.
 
-It validates structure, rejects obviously broken output, limits bullet length, and applies a quality score.
+It validates structure, rejects obviously broken output, limits bullet length, and applies a structural response-shape score.
 
 For factual validation, the future RAG implementation should ground responses in retrieved source documents.
 

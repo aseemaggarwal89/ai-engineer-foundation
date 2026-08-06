@@ -1,6 +1,6 @@
 class AIResponseScorer:
     """
-    Assigns a simple quality score.
+    Assigns a simple structural response score.
     Later you can replace with LLM-as-judge.
     """
 

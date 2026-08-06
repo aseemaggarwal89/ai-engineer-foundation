@@ -247,13 +247,17 @@ raw_output = await self.inference.generate(
 )
 ```
 
-After the model response is validated and parsed, the cache write is async:
+After the model response is validated and parsed, the versioned cache write is async:
 
 ```python
-await self.cache.set(cache_key, json.dumps(bullets), ttl=3600)
+await self.cache.set(
+    cache_key,
+    json.dumps({"schema_version": 1, "bullets": bullets}),
+    ttl=self.settings.cache_ttl_seconds,
+)
 ```
 
-The cache TTL is currently hard-coded to `3600` seconds in the service.
+The cache TTL is now configured through the AI cache settings.
 
 ## Synchronous Work Inside The Async Flow
 
@@ -283,15 +287,17 @@ raw text
 -> validate raw response
 -> parse bullets
 -> validate bullets
--> hallucination guard
--> score bullets
+-> suspicious-output length guard
+-> structural score
 ```
 
-The service rejects low-quality output:
+The service rejects output that does not satisfy the summary response contract:
 
 ```python
 if score < self.threshold:
-    raise ResponseValidationError("Low quality AI output")
+    raise ResponseValidationError(
+        "AI output did not satisfy the summary response contract"
+    )
 ```
 
 This is a useful design pattern:

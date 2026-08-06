@@ -50,13 +50,13 @@ class AIGuardrails:
         Removes dangerous control characters
         and normalizes whitespace.
         """
-        CONTROL_CHAR_PATTERN = re.compile(r"[\x00-\x1F\x7F]")
-        # Remove control chars
+        CONTROL_CHAR_PATTERN = re.compile(r"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]")
+        # Remove unsafe control chars while preserving normal whitespace
+        # separators so words from different lines do not get joined together.
         text = CONTROL_CHAR_PATTERN.sub("", text)
 
         # Normalize whitespace
         text = " ".join(text.split())
 
         return text
-
 

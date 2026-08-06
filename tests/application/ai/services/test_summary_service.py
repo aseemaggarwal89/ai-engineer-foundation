@@ -5,8 +5,10 @@ import pytest
 from app.application.ai.core.pipeline_registry import PipelineRegistry
 from app.application.ai.domain.ai_cache_port import AIResponseCachePort
 from app.application.ai.domain.ai_capability import AICapability
+from app.application.ai.domain.ai_provider import AIProvider
 from app.application.ai.domain.ai_inference_port import AIInferencePort
 from app.application.ai.domain.ai_pipeline_port import AIResponsePipeline
+from app.application.ai.domain.model_registry import ModelRegistrySettings, ModelRoute
 from app.application.ai.prompts.summary_prompt import SummaryPrompt
 from app.application.ai.services.summary_service import SummaryService
 from app.core.config import AISettings
@@ -72,12 +74,13 @@ def make_service(
     cache: FakeCache,
     inference: FakeInference,
     pipeline_registry: FakePipelineRegistry | None = None,
+    settings: AISettings | None = None,
 ) -> SummaryService:
     return SummaryService(
         prompt=FakePrompt(),
         inference=inference,
         cache=cache,
-        settings=AISettings(
+        settings=settings or AISettings(
             model_name="tinyllama",
             temperature=0.6,
             max_tokens=512,
@@ -88,7 +91,14 @@ def make_service(
 
 @pytest.mark.asyncio
 async def test_summary_service_returns_cached_response_without_provider_call():
-    cache = FakeCache(cached_value=json.dumps(["Cached bullet"]))
+    cache = FakeCache(
+        cached_value=json.dumps(
+            {
+                "schema_version": SummaryService.CACHE_SCHEMA_VERSION,
+                "bullets": ["Cached bullet"],
+            }
+        )
+    )
     inference = FakeInference()
     service = make_service(cache, inference)
 
@@ -112,8 +122,22 @@ async def test_summary_service_populates_cache_after_cache_miss():
     assert inference.called is True
     assert inference.kwargs["capability"] == AICapability.SUMMARIZATION
     assert cache.key_parts["prompt"].startswith("test-v1|")
+    assert cache.key_parts["namespace"] == "local"
+    assert cache.key_parts["schema_version"] == SummaryService.CACHE_SCHEMA_VERSION
+    assert cache.key_parts["model_identity"] == (
+        "primary=ollama:tinyllama;fallback=none"
+    )
     assert cache.set_calls == [
-        ("summary-cache-key", json.dumps(["Fresh bullet"]), 3600)
+        (
+            "summary-cache-key",
+            json.dumps(
+                {
+                    "schema_version": SummaryService.CACHE_SCHEMA_VERSION,
+                    "bullets": ["Fresh bullet"],
+                }
+            ),
+            3600,
+        )
     ]
 
 
@@ -124,8 +148,70 @@ async def test_summary_service_rejects_low_quality_output_without_caching():
     pipeline_registry = FakePipelineRegistry(FakePipeline(score=0.5))
     service = make_service(cache, inference, pipeline_registry)
 
-    with pytest.raises(ResponseValidationError, match="Low quality AI output"):
+    with pytest.raises(
+        ResponseValidationError,
+        match="AI output did not satisfy the summary response contract",
+    ):
         await service.summarize("fresh text")
 
     assert inference.called is True
     assert cache.set_calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "cached_value",
+    [
+        "not json",
+        json.dumps(["old raw list"]),
+        json.dumps({"schema_version": 999, "bullets": ["old schema"]}),
+        json.dumps({"schema_version": SummaryService.CACHE_SCHEMA_VERSION}),
+        json.dumps(
+            {
+                "schema_version": SummaryService.CACHE_SCHEMA_VERSION,
+                "bullets": [],
+            }
+        ),
+        json.dumps(
+            {
+                "schema_version": SummaryService.CACHE_SCHEMA_VERSION,
+                "bullets": [""],
+            }
+        ),
+    ],
+)
+async def test_summary_service_treats_invalid_cached_value_as_cache_miss(cached_value):
+    cache = FakeCache(cached_value=cached_value)
+    inference = FakeInference()
+    service = make_service(cache, inference)
+
+    result = await service.summarize("fresh text")
+
+    assert result == ["Fresh bullet"]
+    assert inference.called is True
+    assert len(cache.set_calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_summary_service_cache_identity_includes_configured_fallback_route():
+    cache = FakeCache()
+    inference = FakeInference()
+    settings = AISettings(
+        openai_api_key="sk-test",
+        model_name="tinyllama",
+        temperature=0.6,
+        max_tokens=512,
+        model_registry=ModelRegistrySettings(
+            summarization=ModelRoute(
+                primary=AIProvider.OLLAMA,
+                fallback=AIProvider.OPENAI,
+            )
+        ),
+    )
+    service = make_service(cache, inference, settings=settings)
+
+    await service.summarize("fresh text")
+
+    assert cache.key_parts["model_identity"] == (
+        "primary=ollama:tinyllama;fallback=openai:gpt-4.1-mini"
+    )

@@ -643,7 +643,7 @@ The response pipeline still runs after the provider returns.
 
 Fallback does not skip validation.
 
-The model output is still untrusted until the response pipeline validates and scores it.
+The model output remains unvalidated until the response pipeline checks the response contract and structural score.
 
 ## Ollama Adapter
 

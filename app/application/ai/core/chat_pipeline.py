@@ -10,7 +10,7 @@ class ChatPipeline(AIResponsePipeline):
 
     Chat output is less structured than summarization, so this pipeline focuses
     on deterministic hygiene: normalize text, reject empty/malformed output,
-    detect common refusal boilerplate, and assign a quality score.
+    detect common refusal boilerplate, and assign a structural response score.
     """
 
     REFUSAL_PHRASES = (

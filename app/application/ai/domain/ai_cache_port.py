@@ -14,9 +14,11 @@ class AIResponseCachePort(ABC):
     
     @abstractmethod
     def build_key(self, *,
+                  namespace: str,
                   capability: str,
                   prompt: str,
-                  model: str,
+                  model_identity: str,
                   temperature: float,
-                  max_tokens: int) -> str:
+                  max_tokens: int,
+                  schema_version: int) -> str:
         pass
