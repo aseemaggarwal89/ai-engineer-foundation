@@ -90,7 +90,7 @@ Routing decision: configuration and policy
 
 This lets the summarization feature stay stable even when the provider changes behind it.
 
-## Why I Built This Instead of Directly Using a Gateway
+## Why I Built This Provider Abstraction Myself
 
 After building this project, I learned about LiteLLM.
 
@@ -171,7 +171,7 @@ app/core/retry.py
 app/core/timeout.py
 ```
 
-There is one naming detail worth remembering:
+The split between abstraction and implementation is now explicit:
 
 ```text
 app/application/ai/domain/ai_inference_port.py
@@ -185,11 +185,9 @@ app/application/ai/infrastructure/inference_router.py
 
 contains the concrete `InferenceRouter`.
 
-This name is intentionally different from the domain port file.
+The domain file defines what the application needs.
 
-The domain file describes the abstraction.
-
-The infrastructure file contains the implementation that applies routing and fallback.
+The infrastructure file provides the implementation that applies routing and fallback.
 
 ## The Provider Port
 
