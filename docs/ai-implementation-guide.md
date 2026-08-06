@@ -92,7 +92,7 @@ app/application/ai/
     model_registry.py
 
   infrastructure/
-    ai_inference_port.py
+    inference_router.py
     ollama_adapter.py
     openai_adapter.py
     redis_ai_cache.py
@@ -369,10 +369,8 @@ Important design:
 File:
 
 ```text
-app/application/ai/infrastructure/ai_inference_port.py
+app/application/ai/infrastructure/inference_router.py
 ```
-
-Despite the filename, this file contains `InferenceRouter`.
 
 The router does:
 
@@ -609,7 +607,7 @@ Start here:
 2. `app/dependencies/ai_dependencies.py`
 3. `app/application/ai/usecases/summarize_text.py`
 4. `app/application/ai/services/summary_service.py`
-5. `app/application/ai/infrastructure/ai_inference_port.py`
+5. `app/application/ai/infrastructure/inference_router.py`
 6. `app/core/model_registry.py`
 7. `app/application/ai/infrastructure/ollama_adapter.py`
 8. `app/application/ai/core/summarization_pipeline.py`
@@ -733,4 +731,3 @@ Remember this phrase:
 > Route receives. Use case protects. Service orchestrates. Router selects. Adapter calls. Pipeline trusts.
 
 That is the whole AI flow.
-

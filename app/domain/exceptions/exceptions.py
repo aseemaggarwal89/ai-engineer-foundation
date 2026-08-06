@@ -6,6 +6,8 @@ They are NOT HTTP-aware and should be raised from services or repositories.
 The HTTP layer translates them via global exception handlers.
 """
 
+from enum import Enum
+
 
 class AppException(Exception):
     """
@@ -112,14 +114,56 @@ class AIError(AppException):
     message = "AI inference failed"
 
 
+class ProviderErrorCategory(str, Enum):
+    TIMEOUT = "timeout"
+    NETWORK = "network"
+    RATE_LIMIT = "rate_limit"
+    UNAVAILABLE = "unavailable"
+    AUTHENTICATION = "authentication"
+    INVALID_REQUEST = "invalid_request"
+    INVALID_RESPONSE = "invalid_response"
+    CONFIGURATION = "configuration"
+    CIRCUIT_OPEN = "circuit_open"
+    UNKNOWN = "unknown"
+
+
 class AIProviderError(AIError):
     """
     Raised when an external AI provider fails.
 
-    Safe to trigger fallback.
+    Fallback is allowed only for transient or availability-oriented categories.
     """
     error_code = "AI_PROVIDER_ERROR"
     message = "AI provider failure"
+
+    FALLBACK_ELIGIBLE_CATEGORIES = {
+        ProviderErrorCategory.TIMEOUT,
+        ProviderErrorCategory.NETWORK,
+        ProviderErrorCategory.RATE_LIMIT,
+        ProviderErrorCategory.UNAVAILABLE,
+        ProviderErrorCategory.INVALID_RESPONSE,
+        ProviderErrorCategory.CIRCUIT_OPEN,
+        ProviderErrorCategory.UNKNOWN,
+    }
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        category: ProviderErrorCategory = ProviderErrorCategory.UNKNOWN,
+        provider: str | None = None,
+        model: str | None = None,
+        fallback_eligible: bool | None = None,
+    ):
+        super().__init__(message)
+        self.category = category
+        self.provider = provider
+        self.model = model
+        self.fallback_eligible = (
+            category in self.FALLBACK_ELIGIBLE_CATEGORIES
+            if fallback_eligible is None
+            else fallback_eligible
+        )
 
 
 class ResponseValidationError(AIError):

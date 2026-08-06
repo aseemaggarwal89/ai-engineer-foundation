@@ -8,7 +8,7 @@ from app.application.ai.core.circuit_breakers import CircuitBreaker
 from app.core.config import AISettings
 from app.core.retry import infra_retry
 from app.application.ai.domain.ai_model_port import AIModelPort
-from app.domain.exceptions.exceptions import AIProviderError
+from app.domain.exceptions.exceptions import AIProviderError, ProviderErrorCategory
 
 logger = logging.getLogger(__name__)
 
@@ -47,12 +47,21 @@ class OllamaAdapter(AIModelPort):
                 "ai_circuit_prevented_request",
                 extra={"provider": self.provider},
             )
-            raise AIProviderError("Ollama circuit open")
+            raise AIProviderError(
+                "Ollama circuit open",
+                category=ProviderErrorCategory.CIRCUIT_OPEN,
+                provider=self.provider,
+                model=self.settings.model_name,
+            )
         try:
             result = await self._generate(prompt=prompt, temperature=temperature, max_tokens=max_tokens)
             self.breaker.record_success()
             return result
 
+        except AIProviderError as exc:
+            if exc.fallback_eligible:
+                self.breaker.record_failure()
+            raise
         except Exception:
             self.breaker.record_failure()
             raise
@@ -66,6 +75,14 @@ class OllamaAdapter(AIModelPort):
     ) -> str:
 
         model = self.settings.model_name
+        if not model:
+            raise AIProviderError(
+                "Ollama model is not configured",
+                category=ProviderErrorCategory.CONFIGURATION,
+                provider=self.provider,
+                fallback_eligible=False,
+            )
+
         start = time.perf_counter()
 
         payload = {
@@ -121,7 +138,12 @@ class OllamaAdapter(AIModelPort):
                     },
                 )
 
-                raise AIProviderError("AI model returned empty response")
+                raise AIProviderError(
+                    "AI model returned empty response",
+                    category=ProviderErrorCategory.INVALID_RESPONSE,
+                    provider=self.provider,
+                    model=model,
+                )
 
             return output_text.strip()
 
@@ -132,19 +154,31 @@ class OllamaAdapter(AIModelPort):
                 extra={"provider": self.provider, "model": model},
             )
 
-            raise AIProviderError("AI provider timeout") from exc
+            raise AIProviderError(
+                "AI provider timeout",
+                category=ProviderErrorCategory.TIMEOUT,
+                provider=self.provider,
+                model=model,
+            ) from exc
 
         except httpx.HTTPStatusError as exc:
+            category = self._category_for_status(exc.response.status_code)
             logger.exception(
                 "ai_provider_error",
                 extra={
                     "provider": self.provider,
                     "model": model,
                     "status_code": exc.response.status_code,
+                    "category": category.value,
                 },
             )
 
-            raise AIProviderError("AI provider failure") from exc
+            raise AIProviderError(
+                "AI provider failure",
+                category=category,
+                provider=self.provider,
+                model=model,
+            ) from exc
 
         except httpx.HTTPError as exc:
             logger.exception(
@@ -152,7 +186,15 @@ class OllamaAdapter(AIModelPort):
                 extra={"provider": self.provider, "model": model},
             )
 
-            raise AIProviderError("AI transport failure") from exc
+            raise AIProviderError(
+                "AI transport failure",
+                category=ProviderErrorCategory.NETWORK,
+                provider=self.provider,
+                model=model,
+            ) from exc
+
+        except AIProviderError:
+            raise
 
         except Exception as exc:
             logger.exception(
@@ -164,4 +206,23 @@ class OllamaAdapter(AIModelPort):
                 },
             )
 
-            raise AIProviderError("AI inference failed") from exc
+            raise AIProviderError(
+                "AI inference failed",
+                category=ProviderErrorCategory.UNKNOWN,
+                provider=self.provider,
+                model=model,
+            ) from exc
+
+    @staticmethod
+    def _category_for_status(status_code: int) -> ProviderErrorCategory:
+        if status_code in {401, 403}:
+            return ProviderErrorCategory.AUTHENTICATION
+        if status_code in {400, 404, 422}:
+            return ProviderErrorCategory.INVALID_REQUEST
+        if status_code == 408:
+            return ProviderErrorCategory.TIMEOUT
+        if status_code == 429:
+            return ProviderErrorCategory.RATE_LIMIT
+        if status_code >= 500:
+            return ProviderErrorCategory.UNAVAILABLE
+        return ProviderErrorCategory.UNKNOWN

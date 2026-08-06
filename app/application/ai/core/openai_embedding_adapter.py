@@ -5,7 +5,7 @@ from app.application.ai.domain.embedding_port import EmbeddingPort
 from app.application.ai.core.circuit_breakers import CircuitBreaker
 from app.core.retry import infra_retry
 from app.core.config import AISettings
-from app.domain.exceptions.exceptions import AIProviderError
+from app.domain.exceptions.exceptions import AIProviderError, ProviderErrorCategory
 
 
 class OpenAIEmbeddingAdapter(EmbeddingPort):
@@ -23,7 +23,12 @@ class OpenAIEmbeddingAdapter(EmbeddingPort):
     @infra_retry()
     async def embed(self, text: str) -> List[float]:
         if not self.breaker.allow_request():
-            raise AIProviderError("OpenAI embedding circuit open")
+            raise AIProviderError(
+                "OpenAI embedding circuit open",
+                category=ProviderErrorCategory.CIRCUIT_OPEN,
+                provider="openai",
+                model="text-embedding-3-small",
+            )
 
         try:
             response = await self.client.embeddings.create(

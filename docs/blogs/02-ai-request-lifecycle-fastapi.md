@@ -145,7 +145,7 @@ await self.inference.generate(...)
 The concrete inference implementation is:
 
 ```text
-app/application/ai/infrastructure/ai_inference_port.py
+app/application/ai/infrastructure/inference_router.py
 ```
 
 Despite the filename, this class is the `InferenceRouter`.

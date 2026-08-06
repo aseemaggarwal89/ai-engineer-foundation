@@ -6,7 +6,7 @@ from app.application.ai.core.summarization_pipeline import SummarizationPipeline
 from app.application.ai.domain.ai_capability import AICapability
 from app.application.ai.domain.ai_inference_port import AIInferencePort
 from app.application.ai.domain.ai_provider import AIProvider
-from app.application.ai.infrastructure.ai_inference_port import InferenceRouter
+from app.application.ai.infrastructure.inference_router import InferenceRouter
 from app.application.ai.infrastructure.redis_ai_cache import RedisAIResponseCache
 from app.application.ai.validator.request.ai_guardrails import AIGuardrails
 from app.application.ai.core.bullet_parser import BulletParser
@@ -86,7 +86,7 @@ class ServiceContainer:
         self.pipeline_registry = PipelineRegistry()
 
         # Response pipelines are capability-specific. Each pipeline converts raw
-        # model text into trusted application data.
+        # model text into validated application data.
         self.pipeline_registry.register(
             AICapability.SUMMARIZATION,
             SummarizationPipeline(

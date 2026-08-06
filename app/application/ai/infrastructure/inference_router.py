@@ -48,7 +48,15 @@ class InferenceRouter(AIInferencePort):
             logger.warning(
                 "ai_router_primary_provider_failed",
                 exc_info=exc,
+                extra={
+                    "provider": exc.provider,
+                    "model": exc.model,
+                    "category": exc.category.value,
+                    "fallback_eligible": exc.fallback_eligible,
+                },
             )
+            if not exc.fallback_eligible:
+                raise ServiceError("Primary AI provider failed with a non-fallback error") from exc
 
         # Missing fallback is a configuration decision, not an AttributeError.
         if fallback is None:

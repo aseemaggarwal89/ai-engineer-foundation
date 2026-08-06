@@ -1,8 +1,12 @@
 import pytest
 
 from app.application.ai.domain.ai_capability import AICapability
-from app.application.ai.infrastructure.ai_inference_port import InferenceRouter
-from app.domain.exceptions.exceptions import AIProviderError, ServiceError
+from app.application.ai.infrastructure.inference_router import InferenceRouter
+from app.domain.exceptions.exceptions import (
+    AIProviderError,
+    ProviderErrorCategory,
+    ServiceError,
+)
 
 
 class FakeProvider:
@@ -63,3 +67,26 @@ async def test_inference_router_raises_service_error_without_fallback():
             temperature=0.6,
             max_tokens=128,
         )
+
+
+@pytest.mark.asyncio
+async def test_inference_router_does_not_fallback_for_non_fallback_provider_error():
+    primary = FakeProvider(
+        error=AIProviderError(
+            "auth failed",
+            category=ProviderErrorCategory.AUTHENTICATION,
+        )
+    )
+    fallback = FakeProvider(response="fallback response")
+    router = InferenceRouter(FakeRegistry(primary, fallback))
+
+    with pytest.raises(ServiceError):
+        await router.generate(
+            capability=AICapability.SUMMARIZATION,
+            prompt="prompt",
+            temperature=0.6,
+            max_tokens=128,
+        )
+
+    assert primary.called is True
+    assert fallback.called is False

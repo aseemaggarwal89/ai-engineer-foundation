@@ -171,7 +171,7 @@ This means:
 The inference router lives in:
 
 ```text
-app/application/ai/infrastructure/ai_inference_port.py
+app/application/ai/infrastructure/inference_router.py
 ```
 
 Its workflow is:
