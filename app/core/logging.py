@@ -1,6 +1,5 @@
 import logging
 import sys
-from typing import Any, Dict
 import json
 from datetime import date, datetime, timezone
 from uuid import UUID
@@ -52,12 +51,23 @@ class JsonFormatter(logging.Formatter):
         # ✅ capture extra fields properly
         for key, value in record.__dict__.items():
             if key not in STANDARD_ATTRS:
-                if isinstance(value, (UUID, datetime, date)):
-                    log_record[key] = str(value)
-                else:
-                    log_record[key] = value
+                log_record[key] = self._json_safe(value)
+
+        if record.exc_info:
+            log_record["exception"] = self.formatException(record.exc_info)
 
         return json.dumps(log_record)
+
+    def _json_safe(self, value):
+        if isinstance(value, (UUID, datetime, date)):
+            return str(value)
+
+        try:
+            json.dumps(value)
+        except TypeError:
+            return repr(value)
+
+        return value
 
 
 def configure_logging(log_level: str = "INFO") -> None:
