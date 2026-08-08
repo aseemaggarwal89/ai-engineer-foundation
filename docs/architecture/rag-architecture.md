@@ -67,6 +67,36 @@ RAGQueryUseCase
 -> OllamaAdapter / OpenAIAdapter
 ```
 
+## Configuration
+
+RAG configuration is nested under the existing AI settings model because RAG is an AI application workflow.
+
+Settings path:
+
+```text
+Settings
+└── ai: AISettings
+    └── rag: RAGSettings
+        ├── embedding: EmbeddingSettings
+        └── vector_store: VectorStoreSettings
+```
+
+Environment variables use the repository's existing nested delimiter:
+
+```text
+AI__RAG__ENABLED=false
+AI__RAG__CHUNK_SIZE=800
+AI__RAG__CHUNK_OVERLAP=120
+AI__RAG__RETRIEVAL_TOP_K=5
+AI__RAG__MINIMUM_SCORE=0.3
+AI__RAG__EMBEDDING__MODEL=text-embedding-3-small
+AI__RAG__VECTOR_STORE__PROVIDER=qdrant
+AI__RAG__VECTOR_STORE__URL=http://qdrant:6333
+AI__RAG__VECTOR_STORE__COLLECTION=documents
+```
+
+RAG is disabled by default. These settings do not create Qdrant clients, embedding clients, routes, repositories, or runtime RAG services.
+
 ## Architectural Boundaries
 
 ### Generic AI Infrastructure

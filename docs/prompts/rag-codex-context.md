@@ -49,6 +49,7 @@ Reuse:
 18. Avoid high-cardinality Prometheus labels.
 19. Keep RAG generic; do not introduce OdinSync-specific concepts yet.
 20. Do not add LangChain/LlamaIndex merely for convenience.
+21. RAG settings live under `AISettings` and use `AI__RAG__...` environment variables.
 
 ## Expected RAG Query Flow
 

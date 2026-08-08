@@ -1,6 +1,6 @@
 from enum import Enum
 from functools import lru_cache
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -21,6 +21,105 @@ class Environment(str, Enum):
     LOCAL = "local"
     STAGING = "staging"
     PROD = "prod"
+
+
+class EmbeddingProvider(str, Enum):
+    OPENAI = "openai"
+
+
+class VectorStoreProvider(str, Enum):
+    QDRANT = "qdrant"
+
+
+class EmbeddingSettings(BaseModel):
+    provider: EmbeddingProvider = EmbeddingProvider.OPENAI
+    model: str = "text-embedding-3-small"
+    batch_size: int = 64
+    timeout_seconds: int = 30
+
+    @field_validator("model")
+    @classmethod
+    def validate_model(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("embedding model is required")
+        return value
+
+    @model_validator(mode="after")
+    def validate_embedding_settings(self):
+        if self.batch_size <= 0:
+            raise ValueError("embedding batch_size must be greater than zero")
+
+        if self.timeout_seconds <= 0:
+            raise ValueError("embedding timeout_seconds must be greater than zero")
+
+        return self
+
+
+class VectorStoreSettings(BaseModel):
+    provider: VectorStoreProvider = VectorStoreProvider.QDRANT
+    url: str = "http://qdrant:6333"
+    collection: str = "documents"
+    timeout_seconds: int = 10
+
+    @field_validator("url", "collection")
+    @classmethod
+    def validate_non_empty_text(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("vector-store text settings must not be empty")
+        return value
+
+    @model_validator(mode="after")
+    def validate_vector_store_settings(self):
+        if self.timeout_seconds <= 0:
+            raise ValueError("vector-store timeout_seconds must be greater than zero")
+
+        return self
+
+
+class RAGSettings(BaseModel):
+    enabled: bool = False
+    chunk_size: int = 800
+    chunk_overlap: int = 120
+    retrieval_top_k: int = 5
+    minimum_score: float = 0.3
+    max_document_bytes: int = 5 * 1024 * 1024
+    max_chunks_per_document: int = 1000
+    prompt_version: str = "v1"
+    index_version: str = "v1"
+    embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
+    vector_store: VectorStoreSettings = Field(default_factory=VectorStoreSettings)
+
+    @field_validator("prompt_version", "index_version")
+    @classmethod
+    def validate_version_text(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("RAG version settings must not be empty")
+        return value
+
+    @model_validator(mode="after")
+    def validate_rag_settings(self):
+        if self.chunk_size <= 0:
+            raise ValueError("rag chunk_size must be greater than zero")
+
+        if self.chunk_overlap < 0:
+            raise ValueError("rag chunk_overlap must be greater than or equal to zero")
+
+        if self.chunk_overlap >= self.chunk_size:
+            raise ValueError("rag chunk_overlap must be smaller than chunk_size")
+
+        if self.retrieval_top_k <= 0:
+            raise ValueError("rag retrieval_top_k must be greater than zero")
+
+        if not 0 <= self.minimum_score <= 1:
+            raise ValueError("rag minimum_score must be between 0 and 1")
+
+        if self.max_document_bytes <= 0:
+            raise ValueError("rag max_document_bytes must be greater than zero")
+
+        if self.max_chunks_per_document <= 0:
+            raise ValueError("rag max_chunks_per_document must be greater than zero")
+
+        return self
 # =========================================================
 # AI Settings
 # =========================================================
@@ -50,6 +149,7 @@ class AISettings(BaseModel):
     max_tokens: int = 512
     timeout_seconds: int = 40
     model_registry: ModelRegistrySettings | None = None
+    rag: RAGSettings = Field(default_factory=RAGSettings)
     # Guardrails
     max_input_chars: int = 10_000
     hard_reject_chars: int = 50_000

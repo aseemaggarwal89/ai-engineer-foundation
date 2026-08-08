@@ -13,9 +13,9 @@
 | ID | Task | Status | Notes |
 |---|---|---|---|
 | RAG-PRE-01 | Architecture Readiness Assessment | ✅ | Completed in `docs/architecture/rag-readiness-assessment.md` |
-| RAG-00 | Architecture ADR and Domain Contracts | ✅ | Current foundation task |
-| RAG-01 | RAG Settings Skeleton | ⬜ | Next task |
-| RAG-02 | Document and Chunk Metadata Models | ⬜ | |
+| RAG-00 | Architecture ADR and Domain Contracts | ✅ | Completed |
+| RAG-01 | RAG Settings Skeleton | ✅ | Completed |
+| RAG-02 | Document and Chunk Metadata Models | ⬜ | Next task |
 | RAG-03 | Alembic Document Migration | ⬜ | |
 | RAG-04 | Document Repository | ⬜ | |
 
@@ -59,11 +59,11 @@
 
 ## Current Milestone
 
-RAG-00 — Architecture ADR and Domain Contracts
+RAG-01 — RAG Settings Skeleton
 
 ## Next Task
 
-RAG-01 — RAG Settings Skeleton
+RAG-02 — Document and Chunk Metadata Models
 
 ## Architecture Decisions
 
@@ -81,6 +81,7 @@ RAG-01 — RAG Settings Skeleton
 | Retrieval | Retriever and retrieval policy are not implemented | RAG-14, RAG-15 |
 | Security | Ingestion-specific validation and prompt-injection handling are not implemented | RAG-20 |
 | Observability | RAG-specific logs, metrics, and traces are documented but not implemented | RAG-21, RAG-22 |
+| Runtime wiring | RAG settings exist but do not start infrastructure or expose routes | RAG-05 and later |
 
 ## Validation History
 
@@ -88,3 +89,4 @@ RAG-01 — RAG Settings Skeleton
 |---|---|---|---|---|
 | RAG-PRE-01 | `pytest` passed | `flake8` passed | `docker compose config` passed | Readiness assessment only |
 | RAG-00 | `.venv/bin/pytest` passed, 95 tests | `.venv/bin/flake8` passed | `docker compose config` passed | ADR, docs, Codex context, and domain contracts |
+| RAG-01 | `.venv/bin/pytest` passed, 111 tests | `.venv/bin/flake8` passed | Not required | RAG settings skeleton |
