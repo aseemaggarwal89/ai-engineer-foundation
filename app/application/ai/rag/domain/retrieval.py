@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import math
 from typing import Mapping
 
 from app.application.ai.rag.domain.citation import Citation
@@ -21,8 +22,8 @@ class RetrievalQuery:
         if self.top_k < 1:
             raise ValueError("top_k must be greater than zero")
 
-        if self.minimum_score is not None and not 0 <= self.minimum_score <= 1:
-            raise ValueError("minimum_score must be between 0 and 1")
+        if self.minimum_score is not None and not math.isfinite(self.minimum_score):
+            raise ValueError("minimum_score must be finite")
 
 
 @dataclass(frozen=True)
@@ -39,8 +40,8 @@ class RetrievedChunk:
         _require_text("document_id", self.document_id)
         _require_text("text", self.text)
 
-        if not 0 <= self.score <= 1:
-            raise ValueError("score must be between 0 and 1")
+        if not math.isfinite(self.score):
+            raise ValueError("score must be finite")
 
 
 @dataclass(frozen=True)

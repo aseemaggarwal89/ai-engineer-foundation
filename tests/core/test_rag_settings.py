@@ -59,8 +59,6 @@ def test_nested_environment_overrides_rag_settings(monkeypatch):
         ("chunk_size", 0, "chunk_size"),
         ("chunk_overlap", -1, "chunk_overlap"),
         ("retrieval_top_k", 0, "retrieval_top_k"),
-        ("minimum_score", -0.1, "minimum_score"),
-        ("minimum_score", 1.1, "minimum_score"),
         ("max_document_bytes", 0, "max_document_bytes"),
         ("max_chunks_per_document", 0, "max_chunks_per_document"),
     ],
@@ -73,6 +71,26 @@ def test_rag_settings_reject_invalid_core_values(field, value, match):
 def test_rag_settings_reject_chunk_overlap_equal_to_chunk_size():
     with pytest.raises(ValidationError, match="chunk_overlap"):
         RAGSettings(chunk_size=100, chunk_overlap=100)
+
+
+@pytest.mark.parametrize("minimum_score", [-0.5, 0, 0.3, 1, 1.5, 10])
+def test_rag_settings_accept_finite_minimum_score_values(minimum_score):
+    settings = RAGSettings(minimum_score=minimum_score)
+
+    assert settings.minimum_score == minimum_score
+
+
+@pytest.mark.parametrize(
+    "minimum_score",
+    [
+        float("nan"),
+        float("inf"),
+        float("-inf"),
+    ],
+)
+def test_rag_settings_reject_non_finite_minimum_score_values(minimum_score):
+    with pytest.raises(ValidationError, match="minimum_score"):
+        RAGSettings(minimum_score=minimum_score)
 
 
 @pytest.mark.parametrize(

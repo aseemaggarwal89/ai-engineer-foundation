@@ -82,6 +82,17 @@ RAG-02 — Document and Chunk Metadata Models
 | Security | Ingestion-specific validation and prompt-injection handling are not implemented | RAG-20 |
 | Observability | RAG-specific logs, metrics, and traces are documented but not implemented | RAG-21, RAG-22 |
 | Runtime wiring | RAG settings exist but do not start infrastructure or expose routes | RAG-05 and later |
+| Retrieval score semantics | `minimum_score` is finite-only; final interpretation is deferred to vector-store/retriever policy | RAG-10, RAG-14 |
+
+## Learning / Decision Notes
+
+### RAG-01A — Retrieval Score Semantics
+
+- Removed premature `0..1` `minimum_score` contract.
+- `minimum_score` is now a finite configurable threshold.
+- Vector metric and score interpretation are intentionally deferred.
+- Final score semantics will be decided during VectorStore/Qdrant/Retriever work.
+- Reference: `docs/learning/rag/retrieval-score-semantics.md`
 
 ## Validation History
 
@@ -90,3 +101,4 @@ RAG-02 — Document and Chunk Metadata Models
 | RAG-PRE-01 | `pytest` passed | `flake8` passed | `docker compose config` passed | Readiness assessment only |
 | RAG-00 | `.venv/bin/pytest` passed, 95 tests | `.venv/bin/flake8` passed | `docker compose config` passed | ADR, docs, Codex context, and domain contracts |
 | RAG-01 | `.venv/bin/pytest` passed, 111 tests | `.venv/bin/flake8` passed | Not required | RAG settings skeleton |
+| RAG-01A | `.venv/bin/pytest` passed, 124 tests | `.venv/bin/flake8` passed | Not required | Removed premature normalized retrieval-score assumption from settings and domain contracts |

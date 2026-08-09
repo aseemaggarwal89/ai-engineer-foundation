@@ -1,3 +1,4 @@
+import math
 from enum import Enum
 from functools import lru_cache
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -110,8 +111,8 @@ class RAGSettings(BaseModel):
         if self.retrieval_top_k <= 0:
             raise ValueError("rag retrieval_top_k must be greater than zero")
 
-        if not 0 <= self.minimum_score <= 1:
-            raise ValueError("rag minimum_score must be between 0 and 1")
+        if not math.isfinite(self.minimum_score):
+            raise ValueError("rag minimum_score must be finite")
 
         if self.max_document_bytes <= 0:
             raise ValueError("rag max_document_bytes must be greater than zero")

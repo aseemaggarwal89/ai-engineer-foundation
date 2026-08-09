@@ -97,6 +97,14 @@ AI__RAG__VECTOR_STORE__COLLECTION=documents
 
 RAG is disabled by default. These settings do not create Qdrant clients, embedding clients, routes, repositories, or runtime RAG services.
 
+`minimum_score` is a configured retrieval threshold, but the configuration layer does not define a normalized score range. Retrieval-score ranges are not globally normalized by RAG configuration. Score and distance semantics belong to the retrieval policy and vector-store adapter contract, and will be finalized when the retriever and vector-store adapter are implemented.
+
+Detailed learning note:
+
+```text
+docs/learning/rag/retrieval-score-semantics.md
+```
+
 ## Architectural Boundaries
 
 ### Generic AI Infrastructure

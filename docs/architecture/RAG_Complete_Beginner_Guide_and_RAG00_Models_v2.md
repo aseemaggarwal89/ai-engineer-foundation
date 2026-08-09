@@ -1892,6 +1892,14 @@ minimum_score:
 0.3
 ```
 
+Score note:
+
+```text
+minimum_score is a configured threshold, not a guaranteed 0..1 normalized score.
+Its final meaning belongs to the retriever/vector-store policy.
+See docs/learning/rag/retrieval-score-semantics.md
+```
+
 The system can then ask:
 
 > Find up to five sufficiently relevant knowledge chunks.

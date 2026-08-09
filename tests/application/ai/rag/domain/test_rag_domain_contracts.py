@@ -150,16 +150,39 @@ def test_retrieval_query_and_result_filter_relevant_chunks():
     assert [chunk.chunk_id for chunk in result.relevant_chunks()] == ["chunk-1"]
 
 
-def test_retrieval_models_reject_invalid_scores():
-    with pytest.raises(ValueError, match="minimum_score"):
-        RetrievalQuery(query="hello", minimum_score=1.5)
+def test_retrieval_models_accept_finite_metric_dependent_scores():
+    query = RetrievalQuery(query="hello", minimum_score=-0.5)
 
+    chunk = RetrievedChunk(
+        chunk_id="chunk-1",
+        document_id="doc-1",
+        text="content",
+        score=1.2,
+        citation=Citation(
+            document_id="doc-1",
+            chunk_id="chunk-1",
+            title="Architecture Notes",
+        ),
+    )
+
+    assert query.minimum_score == -0.5
+    assert chunk.score == 1.2
+
+
+@pytest.mark.parametrize("minimum_score", [float("nan"), float("inf"), float("-inf")])
+def test_retrieval_query_rejects_non_finite_minimum_score(minimum_score):
+    with pytest.raises(ValueError, match="minimum_score"):
+        RetrievalQuery(query="hello", minimum_score=minimum_score)
+
+
+@pytest.mark.parametrize("score", [float("nan"), float("inf"), float("-inf")])
+def test_retrieved_chunk_rejects_non_finite_score(score):
     with pytest.raises(ValueError, match="score"):
         RetrievedChunk(
             chunk_id="chunk-1",
             document_id="doc-1",
             text="content",
-            score=1.2,
+            score=score,
             citation=Citation(
                 document_id="doc-1",
                 chunk_id="chunk-1",
