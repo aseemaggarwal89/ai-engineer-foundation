@@ -499,8 +499,12 @@ Future source of truth for:
 - checksum
 - ingestion state
 - index state
+- normalized chunk text
+- chunk identity and provenance
 - processing versions
 - timestamps
+
+PostgreSQL stores authoritative normalized chunk text so the vector index can be rebuilt without requiring the original uploaded file to still be available.
 
 ### Vector Store
 
@@ -511,6 +515,8 @@ Future owner of:
 - similarity-search metadata
 
 It is a rebuildable retrieval index.
+
+The vector store does not own authoritative document text.
 
 ### Redis
 

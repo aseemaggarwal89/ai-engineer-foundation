@@ -15,8 +15,8 @@
 | RAG-PRE-01 | Architecture Readiness Assessment | ✅ | Completed in `docs/architecture/rag-readiness-assessment.md` |
 | RAG-00 | Architecture ADR and Domain Contracts | ✅ | Completed |
 | RAG-01 | RAG Settings Skeleton | ✅ | Completed |
-| RAG-02 | Document and Chunk Metadata Models | ⬜ | Next task |
-| RAG-03 | Alembic Document Migration | ⬜ | |
+| RAG-02 | Document and Chunk Metadata Models | ✅ | Completed |
+| RAG-03 | Alembic Migration for RAG Document Metadata | ⬜ | Next task |
 | RAG-04 | Document Repository | ⬜ | |
 
 ## Ingestion
@@ -59,11 +59,11 @@
 
 ## Current Milestone
 
-RAG-01 — RAG Settings Skeleton
+RAG-02 — Document and Chunk Metadata Models
 
 ## Next Task
 
-RAG-02 — Document and Chunk Metadata Models
+RAG-03 — Alembic Migration for RAG Document Metadata
 
 ## Architecture Decisions
 
@@ -83,6 +83,7 @@ RAG-02 — Document and Chunk Metadata Models
 | Observability | RAG-specific logs, metrics, and traces are documented but not implemented | RAG-21, RAG-22 |
 | Runtime wiring | RAG settings exist but do not start infrastructure or expose routes | RAG-05 and later |
 | Retrieval score semantics | `minimum_score` is finite-only; final interpretation is deferred to vector-store/retriever policy | RAG-10, RAG-14 |
+| RAG persistence | ORM models exist but no Alembic migration or repository has been implemented | RAG-03, RAG-04 |
 
 ## Learning / Decision Notes
 
@@ -94,6 +95,17 @@ RAG-02 — Document and Chunk Metadata Models
 - Final score semantics will be decided during VectorStore/Qdrant/Retriever work.
 - Reference: `docs/learning/rag/retrieval-score-semantics.md`
 
+### RAG-02 — Document and Chunk Persistence Metadata
+
+- Added `RAGDocumentORM` and `RAGDocumentChunkORM`.
+- `document_id + document_version` is the logical document-version identity.
+- `chunk_id` is the stable chunk identity.
+- `document_id + document_version + chunking_version + chunk_index` is the chunk-position identity.
+- PostgreSQL owns authoritative normalized chunk text for rebuildability.
+- Qdrant remains the future rebuildable vector retrieval index.
+- Next migration task: `RAG-03 — Alembic Migration for RAG Document Metadata`.
+- Reference: `docs/learning/rag/document-and-chunk-persistence.md`
+
 ## Validation History
 
 | Task | Tests | Lint | Integration | Notes |
@@ -102,3 +114,4 @@ RAG-02 — Document and Chunk Metadata Models
 | RAG-00 | `.venv/bin/pytest` passed, 95 tests | `.venv/bin/flake8` passed | `docker compose config` passed | ADR, docs, Codex context, and domain contracts |
 | RAG-01 | `.venv/bin/pytest` passed, 111 tests | `.venv/bin/flake8` passed | Not required | RAG settings skeleton |
 | RAG-01A | `.venv/bin/pytest` passed, 124 tests | `.venv/bin/flake8` passed | Not required | Removed premature normalized retrieval-score assumption from settings and domain contracts |
+| RAG-02 | `.venv/bin/pytest` passed, 131 tests | `.venv/bin/flake8` passed | Not required | Document and chunk ORM metadata models |

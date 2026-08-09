@@ -7,12 +7,24 @@ from alembic.script import ScriptDirectory
 
 from app.core.config import Environment
 from app.db.db import Base
-from app.db.models import AuditORM, HealthStatus, UserORM
+from app.db.models import (
+    AuditORM,
+    HealthStatus,
+    RAGDocumentChunkORM,
+    RAGDocumentORM,
+    UserORM,
+)
 
 
 ALEMBIC_INI = Path("app/alembic.ini")
 EXPECTED_HEAD = "06dea7f83838"
-EXPECTED_TABLES = {"users", "audits", "health_status"}
+EXPECTED_TABLES = {
+    "users",
+    "audits",
+    "health_status",
+    "rag_documents",
+    "rag_document_chunks",
+}
 
 
 def alembic_script() -> ScriptDirectory:
@@ -36,7 +48,15 @@ def test_alembic_revision_chain_has_single_expected_head():
 
 
 def test_orm_models_are_registered_in_base_metadata():
-    assert {UserORM.__tablename__, AuditORM.__tablename__, HealthStatus.__tablename__} == EXPECTED_TABLES
+    model_tables = {
+        UserORM.__tablename__,
+        AuditORM.__tablename__,
+        HealthStatus.__tablename__,
+        RAGDocumentORM.__tablename__,
+        RAGDocumentChunkORM.__tablename__,
+    }
+
+    assert model_tables == EXPECTED_TABLES
     assert EXPECTED_TABLES <= set(Base.metadata.tables)
 
 

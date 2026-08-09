@@ -51,6 +51,7 @@ Reuse:
 20. Do not add LangChain/LlamaIndex merely for convenience.
 21. RAG settings live under `AISettings` and use `AI__RAG__...` environment variables.
 22. Do not assume retrieval scores are normalized to `0..1`; score semantics must be defined by the retrieval/vector-store contract.
+23. PostgreSQL persists authoritative normalized chunk text and lifecycle metadata; Qdrant stores the rebuildable vector retrieval index.
 
 ## Expected RAG Query Flow
 
