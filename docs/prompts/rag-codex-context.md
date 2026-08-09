@@ -52,6 +52,9 @@ Reuse:
 21. RAG settings live under `AISettings` and use `AI__RAG__...` environment variables.
 22. Do not assume retrieval scores are normalized to `0..1`; score semantics must be defined by the retrieval/vector-store contract.
 23. PostgreSQL persists authoritative normalized chunk text and lifecycle metadata; Qdrant stores the rebuildable vector retrieval index.
+24. RAG document versions use `(document_id, document_version)` as the database logical identity.
+25. RAG ingestion clients may supply stable document identity and text content, but they cannot set lifecycle status, checksum, embedding model, index version, or processing versions.
+26. RAG HTTP ingestion DTOs must stay separate from domain models and application inputs.
 
 ## Expected RAG Query Flow
 

@@ -29,7 +29,13 @@ config.set_main_option("sqlalchemy.url", DATABASE_URL)
 from app.db.db import Base
 
 # Import mapped model modules before Alembic reads Base.metadata.
-from app.db.models import AuditORM, HealthStatus, UserORM  # noqa: F401
+from app.db.models import (  # noqa: F401
+    AuditORM,
+    HealthStatus,
+    RAGDocumentChunkORM,
+    RAGDocumentORM,
+    UserORM,
+)
 
 # add your model's MetaData object here
 # for 'autogenerate' support

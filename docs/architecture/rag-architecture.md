@@ -89,6 +89,7 @@ AI__RAG__CHUNK_SIZE=800
 AI__RAG__CHUNK_OVERLAP=120
 AI__RAG__RETRIEVAL_TOP_K=5
 AI__RAG__MINIMUM_SCORE=0.3
+AI__RAG__MAX_DOCUMENT_BYTES=5242880
 AI__RAG__EMBEDDING__MODEL=text-embedding-3-small
 AI__RAG__VECTOR_STORE__PROVIDER=qdrant
 AI__RAG__VECTOR_STORE__URL=http://qdrant:6333
@@ -206,6 +207,12 @@ Target workflow:
 Document Route
       |
       v
+Ingestion Request DTO
+      |
+      v
+Application Input
+      |
+      v
 IndexDocumentUseCase
       |
       +--> DocumentLoaderPort
@@ -221,7 +228,16 @@ IndexDocumentUseCase
       +--> DocumentRepositoryPort
 ```
 
-No ingestion route, parser, chunker, embedding batch implementation, repository, or vector store is implemented in `RAG-00`.
+No ingestion route, parser, chunker, embedding batch implementation, repository, or vector store is implemented yet.
+
+`RAG-05` defines only the ingestion request boundary:
+
+- callers provide `document_id`, `title`, `source`, `content_type`, and `content`
+- supported initial content types are `text/plain` and `text/markdown`
+- `document_id` is caller-supplied logical identity, not the database primary key
+- `document_version`, lifecycle status, checksum, embedding model, index version, and processing versions are application-owned
+- request DTOs map into application inputs before a future use case executes
+- document size is validated against `RAGSettings.max_document_bytes` using UTF-8 byte length
 
 ## Package Structure
 
@@ -246,13 +262,18 @@ app/application/ai/rag/
 │   └── __init__.py
 ├── services/
 │   └── __init__.py
+├── schemas/
+│   ├── __init__.py
+│   └── ingestion.py
 ├── usecases/
-│   └── __init__.py
+│   ├── __init__.py
+│   └── ingest_document_input.py
 └── validators/
-    └── __init__.py
+    ├── __init__.py
+    └── ingestion_request_validator.py
 ```
 
-The empty subpackages reserve architectural locations. They do not contain placeholder implementations.
+Some subpackages still reserve architectural locations. `RAG-05` adds the first ingestion boundary without adding the final ingestion route or processing workflow.
 
 ## Domain Contracts
 
@@ -505,6 +526,8 @@ Future source of truth for:
 - timestamps
 
 PostgreSQL stores authoritative normalized chunk text so the vector index can be rebuilt without requiring the original uploaded file to still be available.
+
+RAG document versions use `(document_id, document_version)` as their logical database identity. Chunk rows reference the internal document row primary key with `ON DELETE CASCADE`, so deleting a document-version row also removes its stored chunks.
 
 ### Vector Store
 

@@ -9,3 +9,5 @@
 - [RAG Codex Context](../prompts/rag-codex-context.md)
 - [RAG Retrieval Score Semantics](../learning/rag/retrieval-score-semantics.md)
 - [RAG Document and Chunk Persistence](../learning/rag/document-and-chunk-persistence.md)
+- [RAG Database Schema](../learning/rag/rag-database-schema.md)
+- [RAG Ingestion Request Validation](../learning/rag/rag-ingestion-request-validation.md)

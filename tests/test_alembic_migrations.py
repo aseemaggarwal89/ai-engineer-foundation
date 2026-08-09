@@ -17,7 +17,7 @@ from app.db.models import (
 
 
 ALEMBIC_INI = Path("app/alembic.ini")
-EXPECTED_HEAD = "06dea7f83838"
+EXPECTED_HEAD = "1d9b86e3e5c4"
 EXPECTED_TABLES = {
     "users",
     "audits",
