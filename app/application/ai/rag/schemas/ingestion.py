@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Annotated
 
 from pydantic import (
@@ -9,6 +8,7 @@ from pydantic import (
     field_validator,
 )
 
+from app.application.ai.rag.domain.content_type import RAGDocumentContentType
 from app.application.ai.rag.usecases.ingest_document_input import (
     IngestDocumentInput,
 )
@@ -38,11 +38,6 @@ DocumentContent = Annotated[
     str,
     StringConstraints(min_length=1),
 ]
-
-
-class RAGDocumentContentType(str, Enum):
-    TEXT_PLAIN = "text/plain"
-    TEXT_MARKDOWN = "text/markdown"
 
 
 class RAGIngestionRequest(BaseModel):

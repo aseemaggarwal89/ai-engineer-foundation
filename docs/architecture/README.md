@@ -11,3 +11,4 @@
 - [RAG Document and Chunk Persistence](../learning/rag/document-and-chunk-persistence.md)
 - [RAG Database Schema](../learning/rag/rag-database-schema.md)
 - [RAG Ingestion Request Validation](../learning/rag/rag-ingestion-request-validation.md)
+- [RAG Document Loading](../learning/rag/rag-document-loading.md)

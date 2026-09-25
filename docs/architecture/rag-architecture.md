@@ -215,6 +215,12 @@ Application Input
       v
 IndexDocumentUseCase
       |
+      +--> DocumentLoaderResolver
+      |       |
+      |       +--> PlainTextDocumentLoader
+      |       |
+      |       +--> MarkdownDocumentLoader
+      |
       +--> DocumentLoaderPort
       |
       +--> TextNormalizer
@@ -239,6 +245,16 @@ No ingestion route, parser, chunker, embedding batch implementation, repository,
 - request DTOs map into application inputs before a future use case executes
 - document size is validated against `RAGSettings.max_document_bytes` using UTF-8 byte length
 
+`RAG-06` defines the first document-loading boundary:
+
+- `text/plain` is handled by `PlainTextDocumentLoader`
+- `text/markdown` is handled by `MarkdownDocumentLoader`
+- `DocumentLoaderResolver` selects loaders by content type
+- every loader returns `LoadedDocumentContent`
+- loaders preserve text and Markdown structure
+- normalization and chunking are explicitly deferred to `RAG-07`
+- checksum/idempotency orchestration remains application-owned and is not handled by loaders
+
 ## Package Structure
 
 Initial RAG package:
@@ -250,6 +266,7 @@ app/application/ai/rag/
 │   ├── __init__.py
 │   ├── chunk.py
 │   ├── citation.py
+│   ├── content_type.py
 │   ├── document.py
 │   ├── document_loader_port.py
 │   ├── document_repository_port.py
@@ -257,7 +274,8 @@ app/application/ai/rag/
 │   ├── retrieval.py
 │   └── vector_store_port.py
 ├── infrastructure/
-│   └── __init__.py
+│   ├── __init__.py
+│   └── document_loaders.py
 ├── prompts/
 │   └── __init__.py
 ├── services/
@@ -273,7 +291,7 @@ app/application/ai/rag/
     └── ingestion_request_validator.py
 ```
 
-Some subpackages still reserve architectural locations. `RAG-05` adds the first ingestion boundary without adding the final ingestion route or processing workflow.
+Some subpackages still reserve architectural locations. `RAG-05` adds the first ingestion boundary, and `RAG-06` adds the first loader boundary, without adding the final ingestion route or indexing workflow.
 
 ## Domain Contracts
 
@@ -432,6 +450,19 @@ app/application/ai/rag/domain/document_loader_port.py
 ```
 
 Extraction boundary for plain text, Markdown, PDF, or future source types.
+
+Current RAG-06 loaders support only `text/plain` and `text/markdown`.
+
+The port accepts a `DocumentLoadRequest` and returns `LoadedDocumentContent`.
+
+The current loaded representation preserves:
+
+- `title`
+- `source`
+- `content_type`
+- extracted `text`
+
+It does not expose parser-specific objects, fake page numbers, embeddings, chunks, vector-store IDs, or checksums.
 
 Parser SDK types must not leak through this boundary.
 

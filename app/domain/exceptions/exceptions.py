@@ -104,6 +104,24 @@ class PromptTooLargeError(AppException):
     message = "Prompt exceeds allowed size"
 
 
+class DocumentLoadError(AppException):
+    status_code = 422
+    error_code = "DOCUMENT_LOAD_ERROR"
+    message = "Document could not be loaded"
+
+
+class UnsupportedDocumentTypeError(DocumentLoadError):
+    status_code = 415
+    error_code = "UNSUPPORTED_DOCUMENT_TYPE"
+    message = "Unsupported document content type"
+
+
+class EmptyLoadedDocumentError(DocumentLoadError):
+    status_code = 422
+    error_code = "EMPTY_LOADED_DOCUMENT"
+    message = "Loaded document content is empty"
+
+
 class AIError(AppException):
     """
     Base exception for AI inference failures.

@@ -55,6 +55,8 @@ Reuse:
 24. RAG document versions use `(document_id, document_version)` as the database logical identity.
 25. RAG ingestion clients may supply stable document identity and text content, but they cannot set lifecycle status, checksum, embedding model, index version, or processing versions.
 26. RAG HTTP ingestion DTOs must stay separate from domain models and application inputs.
+27. Document loaders only extract and represent source content; normalization and chunking belong to later RAG stages.
+28. All document loaders return application-owned `LoadedDocumentContent`, never parser-specific objects.
 
 ## Expected RAG Query Flow
 

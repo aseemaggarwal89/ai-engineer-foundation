@@ -24,7 +24,7 @@
 | ID | Task | Status |
 |---|---|---|
 | RAG-05 | Ingestion Request Schema and Validation | ✅ |
-| RAG-06 | Document Loader / Extraction | ⬜ |
+| RAG-06 | Document Loader / Extraction | ✅ |
 | RAG-07 | Normalization and Chunking | ⬜ |
 | RAG-08 | EmbeddingPort Revision | ⬜ |
 | RAG-09 | Embedding Adapter Wiring | ⬜ |
@@ -59,11 +59,11 @@
 
 ## Current Milestone
 
-RAG-05 — Ingestion Request Schema and Validation
+RAG-06 — Document Loader / Extraction
 
 ## Next Task
 
-RAG-06 — Document Loader / Extraction
+RAG-07 — Text Normalizer and Chunker
 
 ## Architecture Decisions
 
@@ -84,7 +84,7 @@ RAG-06 — Document Loader / Extraction
 | Runtime wiring | RAG settings exist but do not start infrastructure or expose routes | RAG-05 and later |
 | Retrieval score semantics | `minimum_score` is finite-only; final interpretation is deferred to vector-store/retriever policy | RAG-10, RAG-14 |
 | RAG repository | RAG tables exist but no repository implementation has been added | RAG-04 |
-| Ingestion lifecycle | Request validation exists, but no loader, checksum, repository write, chunking, embedding, or indexing workflow exists yet | RAG-06 and later |
+| Ingestion lifecycle | Request validation and document loading exist, but no checksum, repository write, chunking, embedding, or indexing workflow exists yet | RAG-07 and later |
 
 ## Learning / Decision Notes
 
@@ -131,6 +131,19 @@ RAG-06 — Document Loader / Extraction
 - No ingestion route, loader, chunker, embedding, Qdrant, repository, or indexing workflow was added.
 - Reference: `docs/learning/rag/rag-ingestion-request-validation.md`
 
+### RAG-06 — Document Loader / Extraction
+
+- Evolved `DocumentLoaderPort` to accept a `DocumentLoadRequest` containing title, source, content type, and content.
+- Added `PlainTextDocumentLoader` for `text/plain`.
+- Added `MarkdownDocumentLoader` for `text/markdown`.
+- Added `DocumentLoaderResolver` for content-type-based loader selection.
+- All loaders return `LoadedDocumentContent` with title, source, content type, and extracted text.
+- Text and Markdown content are preserved without lowercasing, Markdown stripping, whitespace collapsing, or chunking.
+- Unsupported content types raise `UnsupportedDocumentTypeError`.
+- Empty or whitespace-only loaded content raises `EmptyLoadedDocumentError`.
+- Checksum calculation, normalization, chunking, repository writes, embeddings, Qdrant, and indexing orchestration remain deferred.
+- Reference: `docs/learning/rag/rag-document-loading.md`
+
 ## Validation History
 
 | Task | Tests | Lint | Integration | Notes |
@@ -142,3 +155,4 @@ RAG-06 — Document Loader / Extraction
 | RAG-02 | `.venv/bin/pytest` passed, 131 tests | `.venv/bin/flake8` passed | Not required | Document and chunk ORM metadata models |
 | RAG-03 | `.venv/bin/pytest` passed, 133 tests | `.venv/bin/flake8` passed | Disposable migration upgrade/downgrade passed | Alembic migration for RAG document/chunk metadata |
 | RAG-05 | `.venv/bin/pytest` passed, 149 tests | `.venv/bin/flake8` passed | Not required | Ingestion request DTO, application input, and policy validation |
+| RAG-06 | `.venv/bin/pytest` passed, 157 tests | `.venv/bin/flake8` passed | Not required | Plain-text/Markdown document loaders and resolver |

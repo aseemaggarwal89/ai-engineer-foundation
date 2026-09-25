@@ -60,14 +60,12 @@ class LoadedDocumentContent:
     source: str
     content_type: str
     text: str
-    checksum: str
 
     def __post_init__(self):
         _require_text("title", self.title)
         _require_text("source", self.source)
         _require_text("content_type", self.content_type)
         _require_text("text", self.text)
-        _require_text("checksum", self.checksum)
 
 
 def _require_text(name: str, value: str):

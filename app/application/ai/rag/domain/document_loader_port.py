@@ -1,6 +1,19 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
 from app.application.ai.rag.domain.document import LoadedDocumentContent
+
+
+@dataclass(frozen=True)
+class DocumentLoadRequest:
+    title: str
+    source: str
+    content_type: str
+    content: str
+
+    @property
+    def content_size_bytes(self) -> int:
+        return len(self.content.encode("utf-8"))
 
 
 class DocumentLoaderPort(ABC):
@@ -11,5 +24,5 @@ class DocumentLoaderPort(ABC):
     """
 
     @abstractmethod
-    async def extract(self, *, source: str, content_type: str) -> LoadedDocumentContent:
+    async def load(self, request: DocumentLoadRequest) -> LoadedDocumentContent:
         pass

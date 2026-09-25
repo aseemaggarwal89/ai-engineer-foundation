@@ -5,6 +5,7 @@ import pytest
 from app.application.ai.rag.domain.chunk import DocumentChunk, EmbeddedChunk
 from app.application.ai.rag.domain.citation import Citation
 from app.application.ai.rag.domain.document import Document, DocumentStatus
+from app.application.ai.rag.domain.document_loader_port import DocumentLoadRequest
 from app.application.ai.rag.domain.rag_result import RAGResult, RAGResultStatus
 from app.application.ai.rag.domain.retrieval import (
     RetrievalQuery,
@@ -56,6 +57,17 @@ def test_document_rejects_updated_at_before_created_at():
             created_at=datetime(2026, 8, 8, 12, 0, tzinfo=UTC),
             updated_at=datetime(2026, 8, 8, 11, 0, tzinfo=UTC),
         )
+
+
+def test_document_load_request_tracks_utf8_content_size():
+    request = DocumentLoadRequest(
+        title="Architecture Notes",
+        source="manual://architecture-notes",
+        content_type="text/plain",
+        content="éé",
+    )
+
+    assert request.content_size_bytes == 4
 
 
 def test_document_chunk_rejects_negative_index_and_invalid_page_number():
